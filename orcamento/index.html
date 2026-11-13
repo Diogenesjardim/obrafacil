@@ -112,6 +112,28 @@ textarea{min-height:76px;resize:vertical}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.erro{background:var(--vermelho)} #toast.ok{background:var(--verde)}
 
+/* Painel */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border-radius:var(--raio);padding:14px;box-shadow:var(--sombra);border-left:5px solid var(--azul2)}
+.kpi small{display:block;color:var(--cinza);font-weight:700;font-size:.76rem;text-transform:uppercase;letter-spacing:.3px}
+.kpi b{display:block;font-size:1.35rem;color:var(--azul);margin-top:2px}
+.kpi span{font-size:.78rem;color:var(--cinza)}
+.kpi.verde{border-left-color:var(--verde)} .kpi.verde b{color:var(--verde)}
+.kpi.laranja{border-left-color:var(--laranja)}
+.anel{display:flex;align-items:center;gap:14px}
+.anel .r{width:74px;height:74px;border-radius:50%;display:grid;place-items:center;flex:none}
+.anel .r i{width:56px;height:56px;border-radius:50%;background:#fff;display:grid;place-items:center;font-style:normal;font-weight:800;color:var(--azul);font-size:1.05rem}
+.barras{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;align-items:end;height:170px;padding-top:18px}
+.barras .c{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px}
+.barras .b{width:100%;max-width:42px;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#ffa25a,var(--laranja));min-height:3px;transition:height .4s}
+.barras .c.atual .b{background:linear-gradient(180deg,#2f6fb3,var(--azul))}
+.barras .v{font-size:.68rem;font-weight:700;color:var(--azul);white-space:nowrap}
+.barras .m{font-size:.75rem;color:var(--cinza);font-weight:600}
+.alerta-item{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.top-item{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:.9rem;padding:6px 0}
+.top-item .trk{grid-column:1 / -1;height:7px;background:var(--azul3);border-radius:6px;overflow:hidden}
+.top-item .trk i{display:block;height:100%;background:var(--azul2);border-radius:6px}
+
 /* Documento (PDF) */
 .doc-wrap{background:#fff;border-radius:6px;box-shadow:0 4px 24px rgba(0,0,0,.12);overflow:hidden}
 .doc{padding:26px 22px;color:#1a2433;font-size:13px;line-height:1.45}
@@ -168,13 +190,15 @@ textarea{min-height:76px;resize:vertical}
   <section class="view" id="v-lista"></section>
   <section class="view" id="v-editor"></section>
   <section class="view" id="v-doc"></section>
+  <section class="view" id="v-painel"></section>
   <section class="view" id="v-itens"></section>
   <section class="view" id="v-ajustes"></section>
 </main>
 <nav class="bottomnav">
   <button data-nav="lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Orçamentos</button>
-  <button data-nav="itens"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Itens e preços</button>
-  <button data-nav="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-6 7 6v11M9 21v-6h6v6"/></svg>Minha empresa</button>
+  <button data-nav="painel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Painel</button>
+  <button data-nav="itens"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Preços</button>
+  <button data-nav="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-6 7 6v11M9 21v-6h6v6"/></svg>Empresa</button>
 </nav>
 <div id="modal"><div id="modal-box"></div></div>
 <div id="toast"></div>
@@ -247,7 +271,8 @@ function normalizar(d){
     titulo:String(o.titulo || ''), descricao:String(o.descricao || ''),
     itens:o.itens.map(it => ({id:it.id || uid(), tipo:it.tipo === 'mat' ? 'mat' : 'mo', desc:String(it.desc || ''), qtd:Number(it.qtd) || 0, un:String(it.un || 'un'), valor:r2(it.valor)})),
     desconto:r2(o.desconto || 0), descTipo:o.descTipo === '%' ? '%' : 'R$', pagamento:String(o.pagamento || ''), prazo:String(o.prazo || ''), obs:String(o.obs || ''),
-    criadoEm:o.criadoEm || new Date().toISOString(), atualizadoEm:o.atualizadoEm || new Date().toISOString()
+    criadoEm:o.criadoEm || new Date().toISOString(), atualizadoEm:o.atualizadoEm || new Date().toISOString(),
+    enviadoEm:o.enviadoEm || (o.status !== 'rascunho' ? (o.atualizadoEm || '') : ''), aprovadoEm:o.aprovadoEm || (o.status === 'aprovado' ? (o.atualizadoEm || '') : ''), recusadoEm:o.recusadoEm || (o.status === 'recusado' ? (o.atualizadoEm || '') : ''), lembradoEm:o.lembradoEm || ''
   }));
   n.seq = Math.max(Number(d.seq) || 0, ...n.orcamentos.map(o => o.numero), 0);
   n.catalogo = (d.catalogo || []).filter(c => c && c.desc).map(c => ({id:c.id || uid(), desc:String(c.desc), tipo:c.tipo === 'mat' ? 'mat' : 'mo', un:String(c.un || 'un'), valor:r2(c.valor), usadoEm:c.usadoEm || ''}));
@@ -275,6 +300,14 @@ function totais(o){
   return {mo, mat, sub, desc, total:r2(sub - desc)};
 }
 const validoAte = o => addDias(o.data, o.validade || 0);
+function mudarStatus(o, s){
+  const agora = new Date().toISOString();
+  o.status = s; o.atualizadoEm = agora;
+  if (s !== 'rascunho' && !o.enviadoEm) o.enviadoEm = agora;
+  if (s === 'aprovado') o.aprovadoEm = agora;
+  if (s === 'recusado') o.recusadoEm = agora;
+}
+const diasDesde = isoTs => isoTs ? Math.floor((Date.now() - new Date(isoTs).getTime()) / 86400000) : 0;
 const vencido = o => o.status === 'enviado' && validoAte(o) < hoje();
 function novoOrc(){
   const e = db.empresa;
@@ -330,7 +363,7 @@ function atualizarDatalists(){
 const st = {view:'lista', filtro:'todos', busca:'', atual:'', buscaItens:''};
 function renderLista(){
   const m0 = hoje().slice(0, 7);
-  const aprovMes = soma(db.orcamentos.filter(o => o.status === 'aprovado' && o.atualizadoEm.slice(0, 7) === m0), o => totais(o).total);
+  const aprovMes = soma(db.orcamentos.filter(o => o.status === 'aprovado' && (o.aprovadoEm || o.atualizadoEm).slice(0, 7) === m0), o => totais(o).total);
   const aberto = db.orcamentos.filter(o => o.status === 'enviado');
   const q = st.busca.trim().toLowerCase();
   const lista = db.orcamentos.filter(o => (st.filtro === 'todos' || o.status === st.filtro) && (!q || o.cliente.nome.toLowerCase().includes(q) || o.titulo.toLowerCase().includes(q) || numOrc(o.numero).includes(q)))
@@ -525,6 +558,61 @@ function textoWhats(o){
   return L.join('\n');
 }
 
+/* ========== PAINEL ========== */
+const MESES_C = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+function renderPainel(){
+  const os = db.orcamentos.filter(o => !estaVazio(o));
+  const aprov = os.filter(o => o.status === 'aprovado'), recus = os.filter(o => o.status === 'recusado'), env = os.filter(o => o.status === 'enviado');
+  const decididos = aprov.length + recus.length + env.length;
+  const taxa = decididos ? Math.round(aprov.length / decididos * 100) : 0;
+  const m0 = hoje().slice(0, 7);
+  const aprovMes = aprov.filter(o => (o.aprovadoEm || o.atualizadoEm).slice(0, 7) === m0);
+  const media = aprov.length ? soma(aprov, o => totais(o).total) / aprov.length : 0;
+  const d0 = new Date(); const meses = [];
+  for (let k = 5; k >= 0; k--){ const d = new Date(d0.getFullYear(), d0.getMonth() - k, 1); const key = isoDe(d).slice(0, 7);
+    const lista = aprov.filter(o => (o.aprovadoEm || o.atualizadoEm).slice(0, 7) === key);
+    meses.push({key, rot:MESES_C[d.getMonth()], v:soma(lista, o => totais(o).total), n:lista.length}); }
+  const maxM = Math.max(...meses.map(m => m.v), 1);
+  const venc = env.filter(o => vencido(o)).sort((a,b) => validoAte(a).localeCompare(validoAte(b)));
+  const cobrar = env.filter(o => !vencido(o) && diasDesde(o.lembradoEm || o.enviadoEm) >= 3).sort((a,b) => (a.lembradoEm || a.enviadoEm).localeCompare(b.lembradoEm || b.enviadoEm));
+  const top = {};
+  aprov.forEach(o => itensValidos(o).forEach(i => { const k = i.desc.trim(); (top[k] = top[k] || {desc:k, tipo:i.tipo, v:0, n:0}); top[k].v += i.qtd * i.valor; top[k].n++; }));
+  const tops = Object.values(top).sort((a,b) => b.v - a.v).slice(0, 5); const maxT = tops[0]?.v || 1;
+  const cor = taxa >= 50 ? 'var(--verde)' : taxa >= 25 ? 'var(--laranja)' : 'var(--vermelho)';
+  if (!os.length){ $('#v-painel').innerHTML = `<h2>📊 Painel</h2><div class="panel"><p class="vazio">Ainda não tem orçamentos.<br>Quando você fizer e enviar os primeiros, os números aparecem aqui.</p><button class="btn btn-primary btn-block" data-act="novo">➕ Novo orçamento</button></div>`; return; }
+  $('#v-painel').innerHTML = `
+    <h2>📊 Painel</h2>
+    <div class="kpis">
+      <div class="kpi verde" style="grid-column:1 / -1"><small>✅ Aprovado este mês</small><b>${fmt(soma(aprovMes, o => totais(o).total))}</b><span>${aprovMes.length} orçamento(s) fechado(s)</span></div>
+      <div class="kpi"><small>Taxa de fechamento</small><div class="anel" style="margin-top:6px"><div class="r" style="background:conic-gradient(${cor} ${taxa * 3.6}deg, #e8eef6 0)"><i>${taxa}%</i></div><span>${aprov.length} aprovado(s) de ${decididos} enviado(s)</span></div></div>
+      <div class="kpi laranja"><small>Valor médio aprovado</small><b>${fmt(media)}</b><span>por orçamento</span></div>
+      <div class="kpi"><small>⏳ Aguardando cliente</small><b>${fmt(soma(env, o => totais(o).total))}</b><span>${env.length} orçamento(s)</span></div>
+      <div class="kpi" style="border-left-color:var(--vermelho)"><small>❌ Recusados</small><b>${recus.length}</b><span>${fmt(soma(recus, o => totais(o).total))}</span></div>
+    </div>
+
+    <div class="panel"><h3>Valor aprovado por mês</h3>
+      <div class="barras">${meses.map((m, i) => `<div class="c ${i === 5 ? 'atual' : ''}"><span class="v">${m.v ? (m.v >= 1000 ? 'R$ ' + (m.v / 1000).toLocaleString('pt-BR', {maximumFractionDigits:1}) + ' mil' : fmt(m.v)) : ''}</span><div class="b" style="height:${(m.v / maxM * 100).toFixed(1)}%"></div><span class="m">${m.rot}</span></div>`).join('')}</div>
+    </div>
+
+    <div class="panel"><h3>📞 Cobrar resposta ${cobrar.length ? `<span class="badge vermelho">${cobrar.length}</span>` : ''}</h3>
+      ${cobrar.length ? '<p class="hint">Enviados há 3 dias ou mais, sem resposta.</p><div class="lista">' + cobrar.map(o => `<div class="item"><div class="alerta-item"><div><b>${esc(o.cliente.nome)}</b><div class="meta">Nº ${numOrc(o.numero)} · ${fmt(totais(o).total)} · ${o.lembradoEm ? 'lembrado há ' + diasDesde(o.lembradoEm) : 'enviado há ' + diasDesde(o.enviadoEm)} dia(s)</div></div></div>
+        <div class="btns" style="margin-top:8px"><button class="btn btn-sm btn-verde" style="flex:2" data-act="lembrar" data-id="${o.id}">💬 Lembrar no WhatsApp</button><button class="btn btn-sm" style="flex:1" data-act="abrir" data-id="${o.id}">Abrir</button></div></div>`).join('') + '</div>' : '<p class="vazio">Nenhum cliente para cobrar agora. 👍</p>'}
+    </div>
+
+    <div class="panel"><h3>⌛ Vencidos ${venc.length ? `<span class="badge vermelho">${venc.length}</span>` : ''}</h3>
+      ${venc.length ? '<p class="hint">Passaram da validade sem resposta. Renove a data ou marque como recusado.</p><div class="lista">' + venc.map(o => `<div class="item"><b>${esc(o.cliente.nome)}</b><div class="meta">Nº ${numOrc(o.numero)} · ${fmt(totais(o).total)} · venceu em ${fmtData(validoAte(o))}</div>
+        <div class="btns" style="margin-top:8px"><button class="btn btn-sm btn-azul" style="flex:1" data-act="renovar" data-id="${o.id}">🔄 Renovar data</button><button class="btn btn-sm" style="flex:1" data-act="recusar" data-id="${o.id}">❌ Recusado</button></div></div>`).join('') + '</div>' : '<p class="vazio">Nenhum orçamento vencido.</p>'}
+    </div>
+
+    <div class="panel"><h3>🏆 Serviços que mais vendem</h3>
+      ${tops.length ? tops.map(t => `<div class="top-item"><span>${t.tipo === 'mat' ? '🧱' : '🔨'} ${esc(t.desc)} <small style="color:var(--cinza)">(${t.n}x)</small></span><b>${fmt(t.v)}</b><div class="trk"><i style="width:${(t.v / maxT * 100).toFixed(1)}%"></i></div></div>`).join('') : '<p class="vazio">Aparece aqui quando tiver orçamentos aprovados.</p>'}
+    </div>`;
+}
+function textoLembrete(o){
+  const e = db.empresa, t = totais(o);
+  return `Olá, ${o.cliente.nome.split(' ')[0]}! Tudo bem? 😊\nPassando para saber se conseguiu ver o orçamento Nº ${numOrc(o.numero)}${o.titulo ? ' (' + o.titulo + ')' : ''}, no valor de ${fmt(t.total)}.\nQualquer dúvida ou ajuste, estou à disposição!${e.responsavel ? '\n' + e.responsavel : ''}${e.nome ? ' – ' + e.nome : ''}`;
+}
+
 /* ========== ITENS (CATÁLOGO) ========== */
 function renderItens(){
   const q = st.buscaItens.trim().toLowerCase();
@@ -590,7 +678,7 @@ function carregarLogo(file){
 }
 
 /* ========== NAVEGAÇÃO ========== */
-const RENDER = {lista:renderLista, editor:renderEditor, doc:renderDoc, itens:renderItens, ajustes:renderAjustes};
+const RENDER = {painel:renderPainel, lista:renderLista, editor:renderEditor, doc:renderDoc, itens:renderItens, ajustes:renderAjustes};
 function ir(v){
   if (st.view === 'editor' && v !== 'editor' && v !== 'doc') sairEditor();
   if (!RENDER[v]) v = 'lista';
@@ -611,7 +699,7 @@ const acoes = {
   filtro: el => { st.filtro = el.dataset.f; renderLista(); },
   voltar: () => ir('lista'),
   editar: () => ir('editor'),
-  status: el => { const o = orc(st.atual); if (!o) return; o.status = el.dataset.s; o.atualizadoEm = new Date().toISOString(); salvar(); toast('Marcado como ' + STATUS[o.status] + '.', 'ok'); RENDER[st.view](); },
+  status: el => { const o = orc(st.atual); if (!o) return; mudarStatus(o, el.dataset.s); salvar(); toast('Marcado como ' + STATUS[o.status] + '.', 'ok'); RENDER[st.view](); },
   addItem: el => { const o = orc(st.atual); const i = {id:uid(), tipo:el.dataset.t, desc:'', qtd:1, un:el.dataset.t === 'mo' ? 'm²' : 'un', valor:0}; o.itens.push(i); salvar();
     $('#itens').insertAdjacentHTML('beforeend', itemHTML(i)); atualizarTotais(); const inp = $(`[data-i="${i.id}"][data-k="desc"]`); inp.scrollIntoView({block:'center', behavior:'smooth'}); setTimeout(() => inp.focus(), 300); },
   removerItem: async el => { const o = orc(st.atual); const i = o.itens.find(x => x.id === el.dataset.id); if (!i) return;
@@ -619,15 +707,21 @@ const acoes = {
     o.itens = o.itens.filter(x => x.id !== i.id); salvar(); $(`[data-item="${i.id}"]`)?.remove(); atualizarTotais(); },
   trocarTipo: el => { const o = orc(st.atual); const i = o.itens.find(x => x.id === el.dataset.id); if (!i) return; i.tipo = i.tipo === 'mo' ? 'mat' : 'mo'; salvar(); $(`[data-item="${i.id}"]`).outerHTML = itemHTML(i); atualizarTotais(); },
   duplicar: async () => { const o = orc(st.atual); if (!await confirmar(`Criar uma cópia do orçamento Nº ${numOrc(o.numero)}?`, {ok:'Duplicar'})) return;
-    db.seq += 1; const c = JSON.parse(JSON.stringify(o)); Object.assign(c, {id:uid(), numero:db.seq, data:hoje(), status:'rascunho', criadoEm:new Date().toISOString(), atualizadoEm:new Date().toISOString()}); c.itens.forEach(i => i.id = uid());
+    db.seq += 1; const c = JSON.parse(JSON.stringify(o)); Object.assign(c, {id:uid(), numero:db.seq, data:hoje(), status:'rascunho', criadoEm:new Date().toISOString(), atualizadoEm:new Date().toISOString(), enviadoEm:'', aprovadoEm:'', recusadoEm:'', lembradoEm:''}); c.itens.forEach(i => i.id = uid());
     db.orcamentos.push(c); salvar(); st.atual = c.id; renderEditor(); window.scrollTo(0, 0); toast(`Cópia criada: Nº ${numOrc(c.numero)}`, 'ok'); },
   excluir: async () => { const o = orc(st.atual); if (!await confirmar(`Excluir o orçamento Nº ${numOrc(o.numero)}${o.cliente.nome ? ' de <b>' + esc(o.cliente.nome) + '</b>' : ''}?<br><small>Não dá para desfazer.</small>`, {ok:'Excluir', perigo:true})) return;
     db.orcamentos = db.orcamentos.filter(x => x.id !== o.id); salvar(); st.view = 'lista'; ir('lista'); toast('Orçamento excluído.', 'ok'); },
   verDoc: () => { const o = orc(st.atual); const erro = validarParaEnviar(o); if (erro){ toast(erro, 'erro'); if (erro.includes('empresa')) setTimeout(() => ir('ajustes'), 1200); return; } atualizarCatalogo(o); salvar(); ir('doc'); },
-  pdf: () => { const o = orc(st.atual); const t0 = document.title; document.title = `Orcamento_${numOrc(o.numero)}_${o.cliente.nome.replace(/[^\wÀ-ú ]/g, '').trim().replace(/\s+/g, '_')}`; window.print(); setTimeout(() => document.title = t0, 1000); if (o.status === 'rascunho'){ o.status = 'enviado'; salvar(); renderDoc(); } },
+  pdf: () => { const o = orc(st.atual); const t0 = document.title; document.title = `Orcamento_${numOrc(o.numero)}_${o.cliente.nome.replace(/[^\wÀ-ú ]/g, '').trim().replace(/\s+/g, '_')}`; window.print(); setTimeout(() => document.title = t0, 1000); if (o.status === 'rascunho'){ mudarStatus(o, 'enviado'); salvar(); renderDoc(); } },
   whats: () => { const o = orc(st.atual); const d = o.cliente.telefone.replace(/\D/g, ''); const num = d.length >= 10 ? '55' + d : '';
     const a = document.createElement('a'); a.href = `https://wa.me/${num}?text=${encodeURIComponent(textoWhats(o))}`; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
-    if (o.status === 'rascunho'){ o.status = 'enviado'; o.atualizadoEm = new Date().toISOString(); salvar(); renderDoc(); } },
+    if (o.status === 'rascunho'){ mudarStatus(o, 'enviado'); salvar(); renderDoc(); } },
+  lembrar: el => { const o = orc(el.dataset.id); if (!o) return; const d = o.cliente.telefone.replace(/\D/g, ''); const num = d.length >= 10 ? '55' + d : '';
+    const a = document.createElement('a'); a.href = `https://wa.me/${num}?text=${encodeURIComponent(textoLembrete(o))}`; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+    o.lembradoEm = new Date().toISOString(); salvar(); setTimeout(renderPainel, 400); },
+  renovar: async el => { const o = orc(el.dataset.id); if (!o) return; if (!await confirmar(`Renovar o orçamento Nº ${numOrc(o.numero)} com a data de hoje?<br><small>Vai valer por mais ${o.validade} dia(s). Os preços continuam os mesmos — confira antes de reenviar.</small>`, {ok:'Renovar'})) return;
+    o.data = hoje(); o.enviadoEm = ''; o.lembradoEm = ''; o.status = 'rascunho'; o.atualizadoEm = new Date().toISOString(); salvar(); st.atual = o.id; ir('editor'); toast('Data renovada. Confira e envie de novo.', 'ok'); },
+  recusar: async el => { const o = orc(el.dataset.id); if (!o) return; if (!await confirmar(`Marcar o orçamento de <b>${esc(o.cliente.nome)}</b> como recusado?`, {ok:'Marcar recusado'})) return; mudarStatus(o, 'recusado'); salvar(); renderPainel(); toast('Marcado como recusado.', 'ok'); },
   novoCat: () => formCat(null),
   editarCat: el => formCat(el.dataset.id),
   excluirCat: async el => { const c = db.catalogo.find(x => x.id === el.dataset.id); if (!c) return; if (!await confirmar(`Apagar <b>${esc(c.desc)}</b> da tabela de preços?<br><small>Os orçamentos já feitos não mudam.</small>`, {ok:'Apagar', perigo:true})) return;

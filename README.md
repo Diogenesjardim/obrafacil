@@ -23,3 +23,4 @@ No iPhone: abra o link no Safari → Compartilhar → **Adicionar à Tela de In�
 - Tabela de preços que se preenche sozinha com o último preço usado
 - PDF com logo e dados da empresa, e envio pelo WhatsApp
 - Status: rascunho, enviado, aprovado, recusado
+- Painel: taxa de fechamento, aprovado por mês, cobrar resposta no WhatsApp, vencidos e serviços que mais vendem
