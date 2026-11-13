@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f2a4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Orçamentos">
+<title>ObraFácil Orçamentos</title>
+<style>
+:root{
+  --azul:#0f2a4a; --azul2:#17406e; --azul3:#e8eef6;
+  --laranja:#f47c20; --laranja2:#d9660d; --laranja3:#fff1e5;
+  --texto:#1a2433; --cinza:#6a7586; --borda:#dde3ec; --bg:#f2f4f8;
+  --verde:#1b9a59; --verde3:#e5f6ed; --vermelho:#d23f3f; --vermelho3:#fdeaea;
+  --raio:14px; --sombra:0 2px 10px rgba(15,42,74,.08); --navh:68px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--texto);font-size:16px;line-height:1.4;padding-bottom:calc(var(--navh) + env(safe-area-inset-bottom) + 12px)}
+h2{font-size:1.35rem;margin:4px 0 12px;color:var(--azul)}
+h3{font-size:1.05rem;margin:0 0 12px;color:var(--azul)}
+.hidden{display:none!important}
+.topbar{position:sticky;top:0;z-index:30;background:var(--azul);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.2rem}
+.logo .ic{width:34px;height:34px;border-radius:9px;background:var(--laranja);display:grid;place-items:center}
+.logo b{color:var(--laranja)}
+.salvo{font-size:.8rem;color:#c9d6e8}
+main{max-width:860px;margin:0 auto;padding:14px}
+.view{display:none}.view.active{display:block;animation:fade .18s ease}
+@keyframes fade{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+.bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--borda);display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(0,0,0,.06)}
+.bottomnav button{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.8rem;font-weight:600;color:var(--cinza);padding:6px 2px;border-radius:10px;cursor:pointer;min-height:54px}
+.bottomnav button svg{width:26px;height:26px}
+.bottomnav button.active{color:var(--laranja);background:var(--laranja3)}
+.panel{background:#fff;border-radius:var(--raio);padding:16px;box-shadow:var(--sombra);margin-bottom:14px}
+.btn{border:1px solid var(--borda);background:#fff;color:var(--texto);border-radius:12px;padding:12px 16px;font-size:1rem;font-weight:600;cursor:pointer;min-height:48px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;text-decoration:none}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--laranja);border-color:var(--laranja);color:#fff}
+.btn-azul{background:var(--azul);border-color:var(--azul);color:#fff}
+.btn-verde{background:#1fa855;border-color:#1fa855;color:#fff}
+.btn-danger{background:var(--vermelho);border-color:var(--vermelho);color:#fff}
+.btn-sm{padding:8px 12px;min-height:40px;font-size:.88rem;border-radius:10px}
+.btn-block{width:100%}
+.btn-grande{min-height:60px;font-size:1.1rem;box-shadow:0 4px 14px rgba(244,124,32,.35)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+label{display:block;font-size:.88rem;font-weight:600;color:var(--azul);margin-bottom:12px}
+input,select,textarea{display:block;width:100%;margin-top:5px;font-size:16px;padding:12px;border:1px solid var(--borda);border-radius:11px;background:#fff;color:var(--texto);font-family:inherit;min-height:48px;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--laranja);border-color:var(--laranja)}
+textarea{min-height:76px;resize:vertical}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.row3{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,.8fr) minmax(0,1.2fr);gap:8px}
+.row2>*,.row3>*{min-width:0}
+.hint{font-size:.82rem;color:var(--cinza);margin:-4px 0 12px;font-weight:400}
+.vazio{text-align:center;color:var(--cinza);padding:18px 8px;font-size:.92rem}
+.form-erro{background:var(--vermelho3);color:var(--vermelho);border-radius:10px;padding:10px 12px;font-size:.9rem;font-weight:600;margin-bottom:12px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;-webkit-overflow-scrolling:touch}
+.chip{border:1px solid var(--borda);background:#fff;border-radius:999px;padding:9px 14px;font-size:.88rem;font-weight:600;cursor:pointer;min-height:40px;color:var(--texto);white-space:nowrap;font-family:inherit}
+.chip.active{background:var(--azul);color:#fff;border-color:var(--azul)}
+.badge{display:inline-block;font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--azul3);color:var(--azul)}
+.badge.cinza{background:#eceff3;color:var(--cinza)} .badge.verde{background:var(--verde3);color:var(--verde)} .badge.vermelho{background:var(--vermelho3);color:var(--vermelho)} .badge.azul{background:var(--azul3);color:var(--azul2)}
+.lista{display:flex;flex-direction:column;gap:10px}
+.item{background:#fff;border:1px solid var(--borda);border-radius:12px;padding:12px}
+.orc-card{display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.orc-card .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.orc-card b{font-size:1.02rem}
+.meta{font-size:.84rem;color:var(--cinza);margin-top:3px}
+.valor{font-weight:800;color:var(--azul);white-space:nowrap}
+.resumo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.resumo div{background:#fff;border-radius:var(--raio);padding:14px;box-shadow:var(--sombra);border-left:5px solid var(--verde)}
+.resumo div.az{border-left-color:var(--azul2)}
+.resumo small{color:var(--cinza);font-weight:600;font-size:.78rem}
+.resumo b{display:block;font-size:1.2rem;color:var(--azul);margin-top:3px}
+.aviso{background:var(--laranja3);border:1px solid #f9c79d;color:#7a3c06;border-radius:12px;padding:12px 14px;font-size:.9rem;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.aviso button{flex:none}
+.status-chips{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
+.status-chips button{border:2px solid var(--borda);background:#fff;border-radius:11px;padding:10px 2px;font-size:.8rem;font-weight:700;cursor:pointer;color:var(--cinza);font-family:inherit;min-height:46px}
+.status-chips button.on.rascunho{border-color:#9aa4b2;color:#4b5563;background:#eceff3}
+.status-chips button.on.enviado{border-color:var(--azul2);color:var(--azul2);background:var(--azul3)}
+.status-chips button.on.aprovado{border-color:var(--verde);color:var(--verde);background:var(--verde3)}
+.status-chips button.on.recusado{border-color:var(--vermelho);color:var(--vermelho);background:var(--vermelho3)}
+.it{border:1px solid var(--borda);border-radius:12px;padding:10px;background:#fff;position:relative}
+.it.mo{border-left:5px solid var(--azul2)} .it.mat{border-left:5px solid var(--laranja)}
+.it-head{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.it-head .tipo{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.3px;cursor:pointer;border:0;background:none;padding:6px 0;font-family:inherit}
+.it.mo .tipo{color:var(--azul2)} .it.mat .tipo{color:var(--laranja2)}
+.it-head .x{margin-left:auto;border:0;background:#f1f3f6;color:var(--cinza);width:36px;height:36px;border-radius:9px;font-size:1.1rem;cursor:pointer}
+.it input,.it select{margin-top:3px;min-height:44px;padding:10px}
+.it label{margin-bottom:6px;font-size:.75rem}
+.it-tot{text-align:right;font-weight:800;color:var(--azul);font-size:.95rem}
+.add-itens{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.totalbar{position:sticky;bottom:calc(var(--navh) + env(safe-area-inset-bottom) + 8px);z-index:10;background:var(--azul);color:#fff;border-radius:16px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 6px 20px rgba(15,42,74,.35);margin-top:14px}
+.totalbar small{color:#c9d6e8;font-size:.78rem;display:block}
+.totalbar b{font-size:1.4rem;color:#ffb27a}
+.linhas{font-size:.92rem}
+.linhas div{display:flex;justify-content:space-between;padding:4px 0}
+.linhas .tot{font-weight:800;font-size:1.1rem;border-top:1px solid var(--borda);margin-top:4px;padding-top:8px}
+.seg{display:flex;gap:6px}
+.seg input{position:absolute;opacity:0;width:0;height:0;min-height:0}
+.seg label{flex:1;margin:0;text-align:center;padding:11px 6px;border:1px solid var(--borda);border-radius:11px;background:#fff;cursor:pointer;font-size:.88rem;color:var(--texto)}
+.seg input:checked+label{background:var(--azul);border-color:var(--azul);color:#fff}
+.logo-prev{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.logo-prev img{width:72px;height:72px;object-fit:contain;border:1px solid var(--borda);border-radius:12px;background:#fff}
+#modal{position:fixed;inset:0;z-index:60;background:rgba(10,25,45,.55);display:none;align-items:flex-end;justify-content:center}
+#modal.open{display:flex}
+#modal-box{background:#fff;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));animation:sobe .2s ease}
+@keyframes sobe{from{transform:translateY(40px);opacity:.5}to{transform:none;opacity:1}}
+.modal-actions{display:flex;gap:10px;margin-top:8px}.modal-actions .btn{flex:1}
+#toast{position:fixed;left:50%;transform:translateX(-50%) translateY(-20px);top:calc(env(safe-area-inset-top) + 70px);z-index:80;background:var(--azul);color:#fff;padding:12px 18px;border-radius:12px;font-weight:600;font-size:.92rem;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:.25s;max-width:92vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.erro{background:var(--vermelho)} #toast.ok{background:var(--verde)}
+
+/* Documento (PDF) */
+.doc-wrap{background:#fff;border-radius:6px;box-shadow:0 4px 24px rgba(0,0,0,.12);overflow:hidden}
+.doc{padding:26px 22px;color:#1a2433;font-size:13px;line-height:1.45}
+.doc-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:4px solid var(--laranja);padding-bottom:14px;margin-bottom:16px}
+.doc-emp{display:flex;gap:12px;align-items:center}
+.doc-emp img{width:64px;height:64px;object-fit:contain}
+.doc-emp h1{font-size:19px;margin:0;color:var(--azul)}
+.doc-emp div{font-size:11.5px;color:#4b5563}
+.doc-num{text-align:right}
+.doc-num .t{font-size:11px;font-weight:800;letter-spacing:1px;color:var(--laranja2)}
+.doc-num .n{font-size:22px;font-weight:800;color:var(--azul)}
+.doc-num div{font-size:11.5px;color:#4b5563}
+.doc-box{background:#f5f7fa;border-radius:8px;padding:10px 12px;margin-bottom:14px}
+.doc-box .l{font-size:10px;font-weight:800;color:var(--cinza);letter-spacing:.6px;text-transform:uppercase;margin-bottom:2px}
+.doc h2{font-size:15px;margin:0 0 4px;color:var(--azul)}
+.doc table{width:100%;border-collapse:collapse;margin:6px 0 12px}
+.doc th{background:var(--azul);color:#fff;font-size:10.5px;text-transform:uppercase;padding:7px 6px;text-align:left}
+.doc td{padding:7px 6px;border-bottom:1px solid #e5e9ef;vertical-align:top}
+.doc .n{text-align:right;white-space:nowrap}
+.doc .grp td{background:#eef2f7;font-weight:800;color:var(--azul2);font-size:11px;text-transform:uppercase}
+.doc-tot{margin-left:auto;width:min(100%,300px)}
+.doc-tot div{display:flex;justify-content:space-between;padding:3px 0}
+.doc-tot .final{background:var(--azul);color:#fff;border-radius:8px;padding:10px 12px;margin-top:6px;font-size:16px;font-weight:800}
+.doc-cond{margin-top:16px;display:grid;gap:8px}
+.doc-ass{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:44px;text-align:center;font-size:11.5px}
+.doc-ass div{border-top:1px solid #333;padding-top:6px}
+.doc-rod{margin-top:18px;text-align:center;font-size:10.5px;color:#8a94a3}
+.doc-bar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+
+@media (min-width:700px){
+  #modal{align-items:center} #modal-box{border-radius:20px}
+  .doc{padding:40px 44px}
+}
+@media print{
+  @page{size:A4;margin:10mm}
+  body{background:#fff;padding:0!important}
+  .topbar,.bottomnav,.no-print,#toast,#modal,.aviso{display:none!important}
+  main{padding:0;max-width:none}
+  .view{display:none!important} #v-doc{display:block!important}
+  .doc-wrap{box-shadow:none;border-radius:0}
+  .doc{padding:0;font-size:12px}
+  .doc th,.doc .grp td,.doc-tot .final,.doc-head{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .doc tr{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="logo"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></div><span>Orça<b>Fácil</b></span></div>
+  <span class="salvo" id="salvo"></span>
+</header>
+<main>
+  <div id="banner"></div>
+  <section class="view" id="v-lista"></section>
+  <section class="view" id="v-editor"></section>
+  <section class="view" id="v-doc"></section>
+  <section class="view" id="v-itens"></section>
+  <section class="view" id="v-ajustes"></section>
+</main>
+<nav class="bottomnav">
+  <button data-nav="lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Orçamentos</button>
+  <button data-nav="itens"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Itens e preços</button>
+  <button data-nav="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-6 7 6v11M9 21v-6h6v6"/></svg>Minha empresa</button>
+</nav>
+<div id="modal"><div id="modal-box"></div></div>
+<div id="toast"></div>
+<input type="file" id="arq-import" accept="application/json,.json" class="hidden">
+<input type="file" id="arq-logo" accept="image/*" class="hidden">
+<datalist id="dl-itens"></datalist>
+<datalist id="dl-clientes"></datalist>
+
+<script>
+'use strict';
+/* ========== UTILITÁRIOS ========== */
+const CHAVE = 'obrafacil_orcamentos_v1';
+const UNS = ['un','m²','m','m³','diária','hora','kg','saco','lata','barra','peça','verba','serviço'];
+const STATUS = {rascunho:'Rascunho', enviado:'Enviado', aprovado:'Aprovado', recusado:'Recusado'};
+const COR_ST = {rascunho:'cinza', enviado:'azul', aprovado:'verde', recusado:'vermelho'};
+const BRL = new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL'});
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const r2 = v => Math.round((Number(v) || 0) * 100) / 100;
+const fmt = v => BRL.format(r2(v));
+const soma = (a, f) => r2(a.reduce((s, x) => s + (Number(f(x)) || 0), 0));
+const uid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+const isoDe = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const hoje = () => isoDe(new Date());
+const paraData = iso => { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDias = (iso, n) => { const d = paraData(iso); d.setDate(d.getDate() + n); return isoDe(d); };
+const fmtData = iso => iso ? iso.split('-').reverse().join('/') : '';
+const dataValida = iso => /^\d{4}-\d{2}-\d{2}$/.test(iso || '') && isoDe(paraData(iso)) === iso;
+function parseNum(s, casas = 2){
+  s = String(s ?? '').trim().replace(/R\$|\s|%/g, '');
+  if (!s) return NaN;
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  if (!/^\d+(\.\d+)?$/.test(s)) return NaN;
+  const f = Math.pow(10, casas); return Math.round(parseFloat(s) * f) / f;
+}
+const numIn = (v, casas = 2) => (v === '' || v == null || isNaN(v)) ? '' : String(Math.round(v * Math.pow(10, casas)) / Math.pow(10, casas)).replace('.', ',');
+const valIn = v => (v === '' || v == null) ? '' : r2(v).toFixed(2).replace('.', ',');
+const fmtQtd = q => (Math.round(q * 1000) / 1000).toLocaleString('pt-BR');
+const numOrc = n => String(n).padStart(4, '0');
+function mascaraTel(v){ const d = v.replace(/\D/g, '').slice(0, 11); if (d.length <= 2) return d ? '(' + d : ''; if (d.length <= 6) return `(${d.slice(0,2)}) ${d.slice(2)}`; if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`; return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`; }
+
+/* ========== DADOS ========== */
+const empresaPadrao = () => ({nome:'', responsavel:'', telefone:'', documento:'', cidade:'', email:'', logo:'', pagamento:'50% na aprovação e 50% na entrega do serviço.', validade:15, prazo:'', obs:''});
+const vazio = () => ({app:'ObraFacilOrcamentos', versao:1, empresa:empresaPadrao(), seq:0, orcamentos:[], catalogo:[], config:{avisoVisto:false}});
+
+function validar(d){
+  const e = m => ({ok:false, erro:m});
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return e('Arquivo sem dados válidos.');
+  if (d.app && d.app !== 'ObraFacilOrcamentos') return e('Este backup não é do app de orçamentos.');
+  if (!Array.isArray(d.orcamentos)) return e('Lista de orçamentos ausente.');
+  if (d.catalogo != null && !Array.isArray(d.catalogo)) return e('Catálogo inválido.');
+  const ids = new Set();
+  for (const [i, o] of d.orcamentos.entries()){
+    if (!o || typeof o.id !== 'string' || ids.has(o.id)) return e(`Orçamento ${i + 1}: identificador inválido.`);
+    ids.add(o.id);
+    if (!dataValida(o.data)) return e(`Orçamento ${i + 1}: data inválida.`);
+    if (!Array.isArray(o.itens)) return e(`Orçamento ${i + 1}: itens inválidos.`);
+    for (const it of o.itens) if (!it || typeof it.qtd !== 'number' || typeof it.valor !== 'number' || it.qtd < 0 || it.valor < 0) return e(`Orçamento ${i + 1}: item com valor inválido.`);
+  }
+  return {ok:true};
+}
+function normalizar(d){
+  const n = vazio();
+  n.empresa = Object.assign(empresaPadrao(), d.empresa || {});
+  n.config = Object.assign(n.config, d.config || {});
+  n.orcamentos = d.orcamentos.map(o => ({
+    id:o.id, numero:Number(o.numero) || 0, data:o.data, validade:Number(o.validade) || 15, status:STATUS[o.status] ? o.status : 'rascunho',
+    cliente:{nome:String(o.cliente?.nome || ''), telefone:String(o.cliente?.telefone || ''), endereco:String(o.cliente?.endereco || '')},
+    titulo:String(o.titulo || ''), descricao:String(o.descricao || ''),
+    itens:o.itens.map(it => ({id:it.id || uid(), tipo:it.tipo === 'mat' ? 'mat' : 'mo', desc:String(it.desc || ''), qtd:Number(it.qtd) || 0, un:String(it.un || 'un'), valor:r2(it.valor)})),
+    desconto:r2(o.desconto || 0), descTipo:o.descTipo === '%' ? '%' : 'R$', pagamento:String(o.pagamento || ''), prazo:String(o.prazo || ''), obs:String(o.obs || ''),
+    criadoEm:o.criadoEm || new Date().toISOString(), atualizadoEm:o.atualizadoEm || new Date().toISOString()
+  }));
+  n.seq = Math.max(Number(d.seq) || 0, ...n.orcamentos.map(o => o.numero), 0);
+  n.catalogo = (d.catalogo || []).filter(c => c && c.desc).map(c => ({id:c.id || uid(), desc:String(c.desc), tipo:c.tipo === 'mat' ? 'mat' : 'mo', un:String(c.un || 'un'), valor:r2(c.valor), usadoEm:c.usadoEm || ''}));
+  return n;
+}
+function carregar(){ try { const s = localStorage.getItem(CHAVE); if (s){ const d = JSON.parse(s); if (validar(d).ok) return normalizar(d); } } catch(e){ console.error(e); } return vazio(); }
+let db = carregar();
+let tSalvo;
+function salvar(){
+  try { localStorage.setItem(CHAVE, JSON.stringify(db)); const el = $('#salvo'); el.textContent = '✓ salvo'; clearTimeout(tSalvo); tSalvo = setTimeout(() => el.textContent = '', 1500); return true; }
+  catch(e){ toast('Erro ao salvar! Exporte um backup.', 'erro'); return false; }
+}
+let tAuto; const salvarDepois = () => { clearTimeout(tAuto); tAuto = setTimeout(salvar, 350); };
+
+/* ========== REGRAS ========== */
+const orc = id => db.orcamentos.find(o => o.id === id);
+const itensValidos = o => o.itens.filter(i => i.desc.trim());
+function totais(o){
+  const it = itensValidos(o);
+  const mo = soma(it.filter(i => i.tipo === 'mo'), i => i.qtd * i.valor);
+  const mat = soma(it.filter(i => i.tipo === 'mat'), i => i.qtd * i.valor);
+  const sub = r2(mo + mat);
+  let desc = o.descTipo === '%' ? r2(sub * Math.min(o.desconto, 100) / 100) : r2(o.desconto);
+  desc = Math.min(desc, sub);
+  return {mo, mat, sub, desc, total:r2(sub - desc)};
+}
+const validoAte = o => addDias(o.data, o.validade || 0);
+const vencido = o => o.status === 'enviado' && validoAte(o) < hoje();
+function novoOrc(){
+  const e = db.empresa;
+  db.seq += 1;
+  const o = {id:uid(), numero:db.seq, data:hoje(), validade:Number(e.validade) || 15, status:'rascunho', cliente:{nome:'', telefone:'', endereco:''}, titulo:'', descricao:'',
+    itens:[{id:uid(), tipo:'mo', desc:'', qtd:1, un:'serviço', valor:0}], desconto:0, descTipo:'R$', pagamento:e.pagamento || '', prazo:e.prazo || '', obs:e.obs || '',
+    criadoEm:new Date().toISOString(), atualizadoEm:new Date().toISOString()};
+  db.orcamentos.push(o); salvar();
+  return o;
+}
+const estaVazio = o => !o.cliente.nome.trim() && !o.titulo.trim() && !itensValidos(o).length;
+function atualizarCatalogo(o){
+  itensValidos(o).forEach(i => {
+    const k = i.desc.trim().toLowerCase();
+    const c = db.catalogo.find(c => c.desc.toLowerCase() === k);
+    if (c){ if (i.valor > 0){ c.valor = i.valor; c.un = i.un; c.tipo = i.tipo; } c.usadoEm = hoje(); }
+    else if (i.valor > 0) db.catalogo.push({id:uid(), desc:i.desc.trim(), tipo:i.tipo, un:i.un, valor:i.valor, usadoEm:hoje()});
+  });
+}
+function validarParaEnviar(o){
+  if (!o.cliente.nome.trim()) return 'Coloque o nome do cliente.';
+  const it = itensValidos(o);
+  if (!it.length) return 'Adicione pelo menos um item com descrição.';
+  if (it.some(i => !(i.qtd > 0))) return 'Tem item com quantidade zero. Corrija ou apague.';
+  if (totais(o).total <= 0) return 'O total do orçamento está zerado. Confira os valores.';
+  if (!db.empresa.nome.trim()) return 'Preencha o nome da sua empresa em "Minha empresa".';
+  return '';
+}
+
+/* ========== COMPONENTES ========== */
+function toast(msg, tipo = ''){ const t = $('#toast'); t.textContent = msg; t.className = 'show ' + tipo; clearTimeout(toast._t); toast._t = setTimeout(() => t.className = '', 3000); }
+let modalResolve = null;
+function abrirModal(html){ $('#modal-box').innerHTML = html; $('#modal').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function fecharModal(res = false){ $('#modal').classList.remove('open'); document.body.style.overflow = ''; $('#modal-box').innerHTML = ''; if (modalResolve){ const r = modalResolve; modalResolve = null; r(res); } }
+function confirmar(msg, {ok = 'Confirmar', perigo = false, titulo = 'Confirmação'} = {}){
+  return new Promise(res => { if (modalResolve) modalResolve(false);
+    abrirModal(`<h3>${esc(titulo)}</h3><p>${msg}</p><div class="modal-actions"><button class="btn" data-m="nao">Cancelar</button><button class="btn ${perigo ? 'btn-danger' : 'btn-primary'}" data-m="sim">${esc(ok)}</button></div>`);
+    modalResolve = res; });
+}
+function erroForm(form, msg){ let b = $('.form-erro', form); if (!b){ b = document.createElement('div'); b.className = 'form-erro'; form.prepend(b); } b.textContent = msg; toast(msg, 'erro'); return false; }
+function baixar(nome, conteudo, tipo){
+  const url = URL.createObjectURL(new Blob([conteudo], {type:tipo}));
+  const a = document.createElement('a'); a.href = url; a.download = nome; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
+}
+function atualizarDatalists(){
+  $('#dl-itens').innerHTML = db.catalogo.slice().sort((a,b) => a.desc.localeCompare(b.desc, 'pt-BR')).map(c => `<option value="${esc(c.desc)}">${c.tipo === 'mat' ? 'Material' : 'Mão de obra'} · ${fmt(c.valor)}/${esc(c.un)}</option>`).join('');
+  const cli = [...new Set(db.orcamentos.map(o => o.cliente.nome.trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'pt-BR'));
+  $('#dl-clientes').innerHTML = cli.map(c => `<option value="${esc(c)}"></option>`).join('');
+}
+
+/* ========== LISTA ========== */
+const st = {view:'lista', filtro:'todos', busca:'', atual:'', buscaItens:''};
+function renderLista(){
+  const m0 = hoje().slice(0, 7);
+  const aprovMes = soma(db.orcamentos.filter(o => o.status === 'aprovado' && o.atualizadoEm.slice(0, 7) === m0), o => totais(o).total);
+  const aberto = db.orcamentos.filter(o => o.status === 'enviado');
+  const q = st.busca.trim().toLowerCase();
+  const lista = db.orcamentos.filter(o => (st.filtro === 'todos' || o.status === st.filtro) && (!q || o.cliente.nome.toLowerCase().includes(q) || o.titulo.toLowerCase().includes(q) || numOrc(o.numero).includes(q)))
+    .sort((a,b) => b.numero - a.numero);
+  const cont = k => db.orcamentos.filter(o => k === 'todos' || o.status === k).length;
+  $('#v-lista').innerHTML = `
+    ${!db.empresa.nome.trim() ? `<div class="panel" style="border:2px dashed var(--laranja)"><h3>👋 Primeiro passo</h3><p class="hint" style="margin:0 0 10px">Coloque o nome e telefone da sua empresa. Eles aparecem no PDF do orçamento.</p><button class="btn btn-primary btn-block" data-nav="ajustes">Preencher dados da empresa</button></div>` : ''}
+    <button class="btn btn-primary btn-block btn-grande" data-act="novo" style="margin-bottom:14px">➕ Novo orçamento</button>
+    ${db.orcamentos.length ? `<div class="resumo"><div><small>✅ Aprovados no mês</small><b>${fmt(aprovMes)}</b></div><div class="az"><small>⏳ Aguardando cliente</small><b>${fmt(soma(aberto, o => totais(o).total))}</b><small>${aberto.length} orçamento(s)</small></div></div>
+    <input type="search" id="busca" placeholder="🔍 Procurar cliente ou serviço" value="${esc(st.busca)}" style="margin:0 0 10px">
+    <div class="chips">${[['todos','Todos'], ...Object.entries(STATUS)].map(([k, t]) => `<button class="chip ${st.filtro === k ? 'active' : ''}" data-act="filtro" data-f="${k}">${t} (${cont(k)})</button>`).join('')}</div>` : ''}
+    <div class="lista">${lista.map(o => { const t = totais(o); return `
+      <button class="item orc-card" data-act="abrir" data-id="${o.id}">
+        <div class="top"><div><b>${esc(o.cliente.nome || 'Sem cliente')}</b><div class="meta">Nº ${numOrc(o.numero)} · ${fmtData(o.data)}${o.titulo ? ' · ' + esc(o.titulo) : ''}</div></div>
+        <div style="text-align:right"><div class="valor">${fmt(t.total)}</div><span class="badge ${COR_ST[o.status]}">${STATUS[o.status]}</span>${vencido(o) ? '<div class="meta" style="color:var(--vermelho)">vencido</div>' : ''}</div></div>
+      </button>`; }).join('') || (db.orcamentos.length ? '<p class="vazio">Nenhum orçamento encontrado.</p>' : '<p class="vazio">Nenhum orçamento ainda.<br>Toque em <b>Novo orçamento</b> para começar.</p>')}</div>`;
+}
+
+/* ========== EDITOR ========== */
+function itemHTML(i){
+  const tot = r2(i.qtd * i.valor);
+  return `<div class="it ${i.tipo}" data-item="${i.id}">
+    <div class="it-head"><button class="tipo" data-act="trocarTipo" data-id="${i.id}" title="Trocar tipo">${i.tipo === 'mo' ? '🔨 Mão de obra' : '🧱 Material'} ⇄</button><button class="x" data-act="removerItem" data-id="${i.id}" aria-label="Remover item">✕</button></div>
+    <input data-i="${i.id}" data-k="desc" value="${esc(i.desc)}" list="dl-itens" placeholder="${i.tipo === 'mo' ? 'Ex.: Assentamento de piso' : 'Ex.: Saco de cimento 50kg'}" maxlength="140" autocomplete="off">
+    <div class="row3" style="margin-top:6px">
+      <label>Qtd<input data-i="${i.id}" data-k="qtd" inputmode="decimal" value="${numIn(i.qtd, 3)}" placeholder="1"></label>
+      <label>Unidade<select data-i="${i.id}" data-k="un">${[...new Set([...UNS, i.un])].map(u => `<option ${u === i.un ? 'selected' : ''}>${esc(u)}</option>`).join('')}</select></label>
+      <label>Valor unit. (R$)<input data-i="${i.id}" data-k="valor" inputmode="decimal" value="${i.valor ? valIn(i.valor) : ''}" placeholder="0,00"></label>
+    </div>
+    <div class="it-tot" data-tot="${i.id}">${fmt(tot)}</div>
+  </div>`;
+}
+function renderEditor(){
+  const o = orc(st.atual); if (!o) return ir('lista');
+  atualizarDatalists();
+  const t = totais(o);
+  $('#v-editor').innerHTML = `
+    <div class="btns" style="justify-content:space-between;margin-bottom:8px"><button class="btn btn-sm" data-act="voltar">‹ Orçamentos</button><span class="badge ${COR_ST[o.status]}" style="align-self:center">Nº ${numOrc(o.numero)}</span></div>
+    <div class="status-chips">${Object.entries(STATUS).map(([k, tx]) => `<button class="${k} ${o.status === k ? 'on' : ''}" data-act="status" data-s="${k}">${tx}</button>`).join('')}</div>
+
+    <div class="panel"><h3>👤 Cliente</h3>
+      <label>Nome *<input data-f="cliente.nome" value="${esc(o.cliente.nome)}" list="dl-clientes" maxlength="80" placeholder="Nome do cliente" autocomplete="off"></label>
+      <div class="row2">
+        <label>WhatsApp<input data-f="cliente.telefone" data-mask="tel" type="tel" inputmode="tel" value="${esc(o.cliente.telefone)}" placeholder="(11) 90000-0000"></label>
+        <label>Data<input type="date" data-f="data" value="${o.data}"></label>
+      </div>
+      <label style="margin-bottom:0">Endereço da obra<input data-f="cliente.endereco" value="${esc(o.cliente.endereco)}" maxlength="160" placeholder="Rua, número, bairro"></label>
+    </div>
+
+    <div class="panel"><h3>🛠️ Serviço</h3>
+      <label>O que vai ser feito<input data-f="titulo" value="${esc(o.titulo)}" maxlength="100" placeholder="Ex.: Reforma do banheiro"></label>
+      <label style="margin-bottom:0">Detalhes (opcional)<textarea data-f="descricao" maxlength="1500" placeholder="Descreva o serviço, o que está incluso...">${esc(o.descricao)}</textarea></label>
+    </div>
+
+    <div class="panel"><h3>📋 Itens</h3>
+      <p class="hint">Digite o nome do item. Se você já usou antes, o preço aparece sozinho.</p>
+      <div class="lista" id="itens">${o.itens.map(itemHTML).join('')}</div>
+      <div class="add-itens"><button class="btn btn-azul" data-act="addItem" data-t="mo">+ Mão de obra</button><button class="btn btn-primary" data-act="addItem" data-t="mat">+ Material</button></div>
+    </div>
+
+    <div class="panel"><h3>💲 Desconto e condições</h3>
+      <div class="row2">
+        <label>Desconto<input data-f="desconto" inputmode="decimal" value="${o.desconto ? numIn(o.desconto) : ''}" placeholder="0"></label>
+        <label>Tipo de desconto<div class="seg" style="margin-top:5px"><input type="radio" name="dt" id="dt1" value="R$" data-f="descTipo" ${o.descTipo === 'R$' ? 'checked' : ''}><label for="dt1">R$</label><input type="radio" name="dt" id="dt2" value="%" data-f="descTipo" ${o.descTipo === '%' ? 'checked' : ''}><label for="dt2">%</label></div></label>
+      </div>
+      <div class="row2">
+        <label>Válido por (dias)<input data-f="validade" inputmode="numeric" value="${o.validade}" maxlength="3"></label>
+        <label>Prazo de execução<input data-f="prazo" value="${esc(o.prazo)}" maxlength="80" placeholder="Ex.: 10 dias úteis"></label>
+      </div>
+      <label>Forma de pagamento<textarea data-f="pagamento" maxlength="500">${esc(o.pagamento)}</textarea></label>
+      <label style="margin-bottom:0">Observações<textarea data-f="obs" maxlength="800" placeholder="Ex.: Material por conta do cliente, garantia de 90 dias...">${esc(o.obs)}</textarea></label>
+    </div>
+
+    <div class="panel"><div class="linhas" id="linhas"></div></div>
+    <div class="btns"><button class="btn" style="flex:1" data-act="duplicar">📄 Duplicar</button><button class="btn" style="flex:1;color:var(--vermelho)" data-act="excluir">🗑️ Excluir</button></div>
+
+    <div class="totalbar"><div><small>Total</small><b id="tot-geral">${fmt(t.total)}</b></div><button class="btn btn-primary" data-act="verDoc">Ver PDF e enviar ›</button></div>`;
+  atualizarTotais();
+}
+function atualizarTotais(){
+  const o = orc(st.atual); if (!o) return;
+  const t = totais(o);
+  const tg = $('#tot-geral'); if (tg) tg.textContent = fmt(t.total);
+  const l = $('#linhas'); if (l) l.innerHTML = `
+    <div><span>🔨 Mão de obra</span><span>${fmt(t.mo)}</span></div>
+    <div><span>🧱 Material</span><span>${fmt(t.mat)}</span></div>
+    ${t.desc ? `<div style="color:var(--vermelho)"><span>Desconto${o.descTipo === '%' ? ` (${numIn(o.desconto)}%)` : ''}</span><span>− ${fmt(t.desc)}</span></div>` : ''}
+    <div class="tot"><span>Total</span><span>${fmt(t.total)}</span></div>
+    <div class="meta" style="justify-content:flex-start">Válido até ${fmtData(validoAte(o))}</div>`;
+  o.itens.forEach(i => { const el = $(`[data-tot="${i.id}"]`); if (el) el.textContent = fmt(i.qtd * i.valor); });
+}
+function setCampo(o, caminho, valor){
+  const p = caminho.split('.');
+  if (p.length === 2) o[p[0]][p[1]] = valor; else o[p[0]] = valor;
+}
+function onEditorInput(t){
+  const o = orc(st.atual); if (!o) return;
+  if (t.dataset.mask === 'tel') t.value = mascaraTel(t.value);
+  if (t.dataset.f){
+    const f = t.dataset.f; let v = t.value;
+    if (f === 'desconto'){ v = t.value.trim() ? parseNum(t.value) : 0; if (isNaN(v)) return t.style.borderColor = 'var(--vermelho)'; if (o.descTipo === '%' && v > 100) v = 100; }
+    if (f === 'validade'){ v = parseInt(t.value, 10); if (!(v >= 0 && v <= 365)) return t.style.borderColor = 'var(--vermelho)'; }
+    if (f === 'data' && !dataValida(v)) return;
+    if (f === 'descTipo' && !t.checked) return;
+    t.style.borderColor = '';
+    setCampo(o, f, v);
+  } else if (t.dataset.i){
+    const i = o.itens.find(x => x.id === t.dataset.i); if (!i) return;
+    const k = t.dataset.k;
+    if (k === 'qtd' || k === 'valor'){
+      const v = t.value.trim() ? parseNum(t.value, k === 'qtd' ? 3 : 2) : 0;
+      if (isNaN(v) || v > 10000000){ t.style.borderColor = 'var(--vermelho)'; return; }
+      t.style.borderColor = ''; i[k] = v;
+    } else i[k] = t.value;
+    if (k === 'desc'){
+      const c = db.catalogo.find(c => c.desc.toLowerCase() === t.value.trim().toLowerCase());
+      if (c && !i.valor){
+        Object.assign(i, {valor:c.valor, un:c.un, tipo:c.tipo});
+        const box = t.closest('.it'); box.outerHTML = itemHTML(i);
+        toast(`Preço preenchido: ${fmt(c.valor)}/${c.un}`, 'ok');
+      }
+    }
+  } else return;
+  o.atualizadoEm = new Date().toISOString();
+  atualizarTotais(); salvarDepois();
+}
+function sairEditor(){
+  const o = orc(st.atual); if (!o) return;
+  if (estaVazio(o)){
+    db.orcamentos = db.orcamentos.filter(x => x.id !== o.id);
+    if (o.numero === db.seq) db.seq -= 1;
+  } else { o.itens = o.itens.filter(i => i.desc.trim() || i.valor); if (!o.itens.length) o.itens.push({id:uid(), tipo:'mo', desc:'', qtd:1, un:'serviço', valor:0}); atualizarCatalogo(o); }
+  salvar();
+}
+
+/* ========== DOCUMENTO ========== */
+function docHTML(o){
+  const e = db.empresa, t = totais(o), it = itensValidos(o);
+  const linhas = tipo => it.filter(i => i.tipo === tipo).map(i => `<tr><td>${esc(i.desc)}</td><td class="n">${fmtQtd(i.qtd)} ${esc(i.un)}</td><td class="n">${fmt(i.valor)}</td><td class="n"><b>${fmt(i.qtd * i.valor)}</b></td></tr>`).join('');
+  const temMo = it.some(i => i.tipo === 'mo'), temMat = it.some(i => i.tipo === 'mat');
+  const contato = [e.telefone && '📞 ' + esc(e.telefone), e.email && esc(e.email)].filter(Boolean).join(' · ');
+  return `<div class="doc">
+    <div class="doc-head">
+      <div class="doc-emp">${e.logo ? `<img src="${e.logo}" alt="">` : ''}<div><h1>${esc(e.nome || 'Sua empresa')}</h1>
+        ${e.responsavel ? `<div>${esc(e.responsavel)}</div>` : ''}${contato ? `<div>${contato}</div>` : ''}${e.documento ? `<div>${esc(e.documento)}</div>` : ''}${e.cidade ? `<div>${esc(e.cidade)}</div>` : ''}</div></div>
+      <div class="doc-num"><div class="t">ORÇAMENTO</div><div class="n">Nº ${numOrc(o.numero)}</div><div>Data: ${fmtData(o.data)}</div><div>Válido até: <b>${fmtData(validoAte(o))}</b></div></div>
+    </div>
+    <div class="doc-box"><div class="l">Cliente</div><b>${esc(o.cliente.nome)}</b>${o.cliente.telefone ? ` · ${esc(o.cliente.telefone)}` : ''}${o.cliente.endereco ? `<div>📍 ${esc(o.cliente.endereco)}</div>` : ''}</div>
+    ${o.titulo || o.descricao ? `<div style="margin-bottom:12px">${o.titulo ? `<h2>${esc(o.titulo)}</h2>` : ''}${o.descricao ? `<div style="white-space:pre-wrap">${esc(o.descricao)}</div>` : ''}</div>` : ''}
+    <table><thead><tr><th>Descrição</th><th class="n">Qtd</th><th class="n">Valor unit.</th><th class="n">Total</th></tr></thead><tbody>
+      ${temMo && temMat ? '<tr class="grp"><td colspan="4">Mão de obra</td></tr>' : ''}${linhas('mo')}
+      ${temMo && temMat ? '<tr class="grp"><td colspan="4">Material</td></tr>' : ''}${linhas('mat')}
+    </tbody></table>
+    <div class="doc-tot">
+      ${temMo && temMat ? `<div><span>Mão de obra</span><span>${fmt(t.mo)}</span></div><div><span>Material</span><span>${fmt(t.mat)}</span></div>` : ''}
+      ${t.desc ? `<div><span>Subtotal</span><span>${fmt(t.sub)}</span></div><div><span>Desconto${o.descTipo === '%' ? ` (${numIn(o.desconto)}%)` : ''}</span><span>− ${fmt(t.desc)}</span></div>` : ''}
+      <div class="final"><span>TOTAL</span><span>${fmt(t.total)}</span></div>
+    </div>
+    <div class="doc-cond">
+      ${o.pagamento ? `<div class="doc-box" style="margin:0"><div class="l">Forma de pagamento</div><div style="white-space:pre-wrap">${esc(o.pagamento)}</div></div>` : ''}
+      ${o.prazo ? `<div class="doc-box" style="margin:0"><div class="l">Prazo de execução</div>${esc(o.prazo)}</div>` : ''}
+      ${o.obs ? `<div class="doc-box" style="margin:0"><div class="l">Observações</div><div style="white-space:pre-wrap">${esc(o.obs)}</div></div>` : ''}
+    </div>
+    <div class="doc-ass"><div>${esc(e.responsavel || e.nome || 'Responsável')}</div><div>${esc(o.cliente.nome)}<br><small>Aprovado em ___/___/______</small></div></div>
+    <div class="doc-rod">Orçamento válido por ${o.validade} dia(s) a partir de ${fmtData(o.data)}.</div>
+  </div>`;
+}
+function renderDoc(){
+  const o = orc(st.atual); if (!o) return ir('lista');
+  $('#v-doc').innerHTML = `
+    <div class="no-print" style="margin-bottom:10px"><button class="btn btn-sm" data-act="editar">‹ Voltar e editar</button></div>
+    <div class="doc-bar no-print"><button class="btn btn-verde" data-act="whats">💬 Enviar no WhatsApp</button><button class="btn btn-primary" data-act="pdf">📄 Salvar PDF</button></div>
+    <p class="hint no-print">No iPhone: <b>Salvar PDF</b> → toque em compartilhar (⬆️) → escolha WhatsApp ou "Salvar em Arquivos".</p>
+    <div class="doc-wrap">${docHTML(o)}</div>
+    <div class="no-print" style="margin-top:14px"><p class="hint">O cliente respondeu? Marque aqui:</p>
+      <div class="status-chips">${Object.entries(STATUS).map(([k, tx]) => `<button class="${k} ${o.status === k ? 'on' : ''}" data-act="status" data-s="${k}">${tx}</button>`).join('')}</div></div>`;
+}
+function textoWhats(o){
+  const e = db.empresa, t = totais(o), it = itensValidos(o);
+  const L = [`*ORÇAMENTO Nº ${numOrc(o.numero)}*${e.nome ? ' – ' + e.nome : ''}`, `Cliente: ${o.cliente.nome}`];
+  if (o.titulo) L.push(`Serviço: ${o.titulo}`);
+  L.push('');
+  const bloco = (tipo, nome) => { const g = it.filter(i => i.tipo === tipo); if (!g.length) return; L.push(`*${nome}*`); g.forEach(i => L.push(`• ${i.desc} – ${fmtQtd(i.qtd)} ${i.un} × ${fmt(i.valor)} = ${fmt(i.qtd * i.valor)}`)); L.push(''); };
+  bloco('mo', 'Mão de obra'); bloco('mat', 'Material');
+  if (t.desc) L.push(`Subtotal: ${fmt(t.sub)}`, `Desconto: − ${fmt(t.desc)}`);
+  L.push(`*TOTAL: ${fmt(t.total)}*`, '');
+  if (o.pagamento) L.push(`Pagamento: ${o.pagamento}`);
+  if (o.prazo) L.push(`Prazo: ${o.prazo}`);
+  if (o.obs) L.push(`Obs.: ${o.obs}`);
+  L.push(`Válido até ${fmtData(validoAte(o))}`);
+  if (e.responsavel || e.telefone) L.push('', [e.responsavel, e.telefone].filter(Boolean).join(' – '));
+  return L.join('\n');
+}
+
+/* ========== ITENS (CATÁLOGO) ========== */
+function renderItens(){
+  const q = st.buscaItens.trim().toLowerCase();
+  const lista = db.catalogo.filter(c => !q || c.desc.toLowerCase().includes(q)).sort((a,b) => a.tipo.localeCompare(b.tipo) || a.desc.localeCompare(b.desc, 'pt-BR'));
+  $('#v-itens').innerHTML = `
+    <h2>Itens e preços</h2>
+    <p class="hint">Sua tabela de preços. Os itens que você usa nos orçamentos são salvos aqui sozinhos, com o último preço.</p>
+    <button class="btn btn-primary btn-block" data-act="novoCat" style="margin-bottom:10px">+ Adicionar item</button>
+    <input type="search" id="busca-itens" placeholder="🔍 Procurar item" value="${esc(st.buscaItens)}" style="margin:0 0 10px">
+    <div class="lista" id="cat-lista">${lista.map(c => `<button class="item orc-card" data-act="editarCat" data-id="${c.id}"><div class="top"><div><b>${esc(c.desc)}</b><div class="meta">${c.tipo === 'mat' ? '🧱 Material' : '🔨 Mão de obra'}${c.usadoEm ? ' · usado em ' + fmtData(c.usadoEm) : ''}</div></div><div class="valor">${fmt(c.valor)}<div class="meta" style="text-align:right">por ${esc(c.un)}</div></div></div></button>`).join('') || '<p class="vazio">Nenhum item ainda.</p>'}</div>`;
+}
+function formCat(id){
+  const c = id ? db.catalogo.find(x => x.id === id) : {desc:'', tipo:'mo', un:'m²', valor:''};
+  if (!c) return;
+  abrirModal(`<h3>${id ? 'Editar item' : 'Novo item'}</h3><form data-form="cat" novalidate><input type="hidden" name="id" value="${id || ''}">
+    <label>Descrição *<input name="desc" maxlength="140" value="${esc(c.desc)}" placeholder="Ex.: Pintura de parede"></label>
+    <div class="seg" style="margin-bottom:12px"><input type="radio" name="tipo" id="ct1" value="mo" ${c.tipo === 'mo' ? 'checked' : ''}><label for="ct1">🔨 Mão de obra</label><input type="radio" name="tipo" id="ct2" value="mat" ${c.tipo === 'mat' ? 'checked' : ''}><label for="ct2">🧱 Material</label></div>
+    <div class="row2"><label>Unidade<select name="un">${[...new Set([...UNS, c.un])].map(u => `<option ${u === c.un ? 'selected' : ''}>${esc(u)}</option>`).join('')}</select></label>
+    <label>Preço (R$) *<input name="valor" inputmode="decimal" value="${valIn(c.valor)}" placeholder="0,00"></label></div>
+    <div class="modal-actions"><button type="button" class="btn" data-act="fecharModal">Cancelar</button><button class="btn btn-primary">Salvar</button></div>
+    ${id ? `<button type="button" class="btn btn-block" style="margin-top:12px;color:var(--vermelho)" data-act="excluirCat" data-id="${id}">🗑️ Apagar item</button>` : ''}
+  </form>`);
+}
+
+/* ========== AJUSTES ========== */
+function renderAjustes(){
+  const e = db.empresa;
+  $('#v-ajustes').innerHTML = `
+    <h2>Minha empresa</h2>
+    <div class="panel"><h3>🏢 Dados que saem no PDF</h3>
+      <div class="logo-prev">${e.logo ? `<img src="${e.logo}" alt="Logo">` : '<div style="width:72px;height:72px;border:2px dashed var(--borda);border-radius:12px;display:grid;place-items:center;color:var(--cinza);font-size:.75rem;text-align:center">sem<br>logo</div>'}
+        <div class="btns"><button class="btn btn-sm" data-act="logo">📷 ${e.logo ? 'Trocar' : 'Colocar'} logo</button>${e.logo ? '<button class="btn btn-sm" data-act="semLogo">Remover</button>' : ''}</div></div>
+      <label>Nome da empresa *<input data-e="nome" value="${esc(e.nome)}" maxlength="80" placeholder="Ex.: Silva Reformas"></label>
+      <label>Seu nome (responsável)<input data-e="responsavel" value="${esc(e.responsavel)}" maxlength="80"></label>
+      <div class="row2"><label>WhatsApp<input data-e="telefone" data-mask="tel" type="tel" inputmode="tel" value="${esc(e.telefone)}" placeholder="(11) 90000-0000"></label>
+      <label>CPF ou CNPJ<input data-e="documento" value="${esc(e.documento)}" maxlength="30" placeholder="Opcional"></label></div>
+      <div class="row2"><label>Cidade<input data-e="cidade" value="${esc(e.cidade)}" maxlength="60" placeholder="Ex.: Osasco - SP"></label>
+      <label>E-mail<input data-e="email" type="email" value="${esc(e.email)}" maxlength="80" placeholder="Opcional"></label></div>
+    </div>
+    <div class="panel"><h3>📝 Padrão para novos orçamentos</h3>
+      <div class="row2"><label>Validade (dias)<input data-e="validade" inputmode="numeric" value="${e.validade}" maxlength="3"></label>
+      <label>Prazo padrão<input data-e="prazo" value="${esc(e.prazo)}" maxlength="80" placeholder="Opcional"></label></div>
+      <label>Forma de pagamento<textarea data-e="pagamento" maxlength="500">${esc(e.pagamento)}</textarea></label>
+      <label style="margin-bottom:0">Observações padrão<textarea data-e="obs" maxlength="800" placeholder="Ex.: Garantia de 90 dias.">${esc(e.obs)}</textarea></label>
+    </div>
+    <div class="panel"><h3>💾 Backup</h3>
+      <div class="aviso" style="display:block;margin-bottom:12px">⚠️ Os dados ficam <b>só neste celular</b>. Exporte um backup de vez em quando e guarde no WhatsApp ou e-mail.</div>
+      <div class="btns"><button class="btn btn-primary" data-act="exportar">⬇️ Exportar backup</button><button class="btn btn-azul" data-act="importar">⬆️ Importar backup</button></div>
+    </div>
+    <div class="panel"><h3>🧹 Limpar</h3><button class="btn btn-block" style="color:var(--vermelho)" data-act="limpar">🗑️ Apagar todos os dados</button></div>
+    <p class="hint" style="text-align:center">OrçaFácil · parte do ObraFácil · funciona sem internet depois de aberto</p>`;
+}
+function carregarLogo(file){
+  if (!file || !file.type.startsWith('image/')) return toast('Escolha uma imagem.', 'erro');
+  const r = new FileReader();
+  r.onload = () => { const img = new Image(); img.onload = () => {
+    const max = 320, k = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    db.empresa.logo = c.toDataURL('image/png'); salvar(); renderAjustes(); toast('Logo salva.', 'ok');
+  }; img.onerror = () => toast('Não consegui abrir essa imagem.', 'erro'); img.src = r.result; };
+  r.readAsDataURL(file);
+}
+
+/* ========== NAVEGAÇÃO ========== */
+const RENDER = {lista:renderLista, editor:renderEditor, doc:renderDoc, itens:renderItens, ajustes:renderAjustes};
+function ir(v){
+  if (st.view === 'editor' && v !== 'editor' && v !== 'doc') sairEditor();
+  if (!RENDER[v]) v = 'lista';
+  st.view = v;
+  $$('.view').forEach(e => e.classList.toggle('active', e.id === 'v-' + v));
+  const navAtivo = (v === 'editor' || v === 'doc') ? 'lista' : v;
+  $$('.bottomnav [data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === navAtivo));
+  $('#banner').innerHTML = db.config.avisoVisto || v === 'doc' ? '' : `<div class="aviso"><div>⚠️ Os dados ficam <b>só neste celular</b>. Faça backup em "Minha empresa".</div><button class="btn btn-sm" data-act="okAviso">Entendi</button></div>`;
+  RENDER[v](); window.scrollTo(0, 0);
+}
+
+/* ========== AÇÕES ========== */
+const acoes = {
+  fecharModal: () => fecharModal(false),
+  okAviso: () => { db.config.avisoVisto = true; salvar(); $('#banner').innerHTML = ''; },
+  novo: () => { const o = novoOrc(); st.atual = o.id; ir('editor'); setTimeout(() => $('[data-f="cliente.nome"]')?.focus(), 250); },
+  abrir: el => { st.atual = el.dataset.id; ir('editor'); },
+  filtro: el => { st.filtro = el.dataset.f; renderLista(); },
+  voltar: () => ir('lista'),
+  editar: () => ir('editor'),
+  status: el => { const o = orc(st.atual); if (!o) return; o.status = el.dataset.s; o.atualizadoEm = new Date().toISOString(); salvar(); toast('Marcado como ' + STATUS[o.status] + '.', 'ok'); RENDER[st.view](); },
+  addItem: el => { const o = orc(st.atual); const i = {id:uid(), tipo:el.dataset.t, desc:'', qtd:1, un:el.dataset.t === 'mo' ? 'm²' : 'un', valor:0}; o.itens.push(i); salvar();
+    $('#itens').insertAdjacentHTML('beforeend', itemHTML(i)); atualizarTotais(); const inp = $(`[data-i="${i.id}"][data-k="desc"]`); inp.scrollIntoView({block:'center', behavior:'smooth'}); setTimeout(() => inp.focus(), 300); },
+  removerItem: async el => { const o = orc(st.atual); const i = o.itens.find(x => x.id === el.dataset.id); if (!i) return;
+    if ((i.desc || i.valor) && !await confirmar(`Remover o item <b>${esc(i.desc || 'sem nome')}</b>?`, {ok:'Remover', perigo:true})) return;
+    o.itens = o.itens.filter(x => x.id !== i.id); salvar(); $(`[data-item="${i.id}"]`)?.remove(); atualizarTotais(); },
+  trocarTipo: el => { const o = orc(st.atual); const i = o.itens.find(x => x.id === el.dataset.id); if (!i) return; i.tipo = i.tipo === 'mo' ? 'mat' : 'mo'; salvar(); $(`[data-item="${i.id}"]`).outerHTML = itemHTML(i); atualizarTotais(); },
+  duplicar: async () => { const o = orc(st.atual); if (!await confirmar(`Criar uma cópia do orçamento Nº ${numOrc(o.numero)}?`, {ok:'Duplicar'})) return;
+    db.seq += 1; const c = JSON.parse(JSON.stringify(o)); Object.assign(c, {id:uid(), numero:db.seq, data:hoje(), status:'rascunho', criadoEm:new Date().toISOString(), atualizadoEm:new Date().toISOString()}); c.itens.forEach(i => i.id = uid());
+    db.orcamentos.push(c); salvar(); st.atual = c.id; renderEditor(); window.scrollTo(0, 0); toast(`Cópia criada: Nº ${numOrc(c.numero)}`, 'ok'); },
+  excluir: async () => { const o = orc(st.atual); if (!await confirmar(`Excluir o orçamento Nº ${numOrc(o.numero)}${o.cliente.nome ? ' de <b>' + esc(o.cliente.nome) + '</b>' : ''}?<br><small>Não dá para desfazer.</small>`, {ok:'Excluir', perigo:true})) return;
+    db.orcamentos = db.orcamentos.filter(x => x.id !== o.id); salvar(); st.view = 'lista'; ir('lista'); toast('Orçamento excluído.', 'ok'); },
+  verDoc: () => { const o = orc(st.atual); const erro = validarParaEnviar(o); if (erro){ toast(erro, 'erro'); if (erro.includes('empresa')) setTimeout(() => ir('ajustes'), 1200); return; } atualizarCatalogo(o); salvar(); ir('doc'); },
+  pdf: () => { const o = orc(st.atual); const t0 = document.title; document.title = `Orcamento_${numOrc(o.numero)}_${o.cliente.nome.replace(/[^\wÀ-ú ]/g, '').trim().replace(/\s+/g, '_')}`; window.print(); setTimeout(() => document.title = t0, 1000); if (o.status === 'rascunho'){ o.status = 'enviado'; salvar(); renderDoc(); } },
+  whats: () => { const o = orc(st.atual); const d = o.cliente.telefone.replace(/\D/g, ''); const num = d.length >= 10 ? '55' + d : '';
+    const a = document.createElement('a'); a.href = `https://wa.me/${num}?text=${encodeURIComponent(textoWhats(o))}`; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+    if (o.status === 'rascunho'){ o.status = 'enviado'; o.atualizadoEm = new Date().toISOString(); salvar(); renderDoc(); } },
+  novoCat: () => formCat(null),
+  editarCat: el => formCat(el.dataset.id),
+  excluirCat: async el => { const c = db.catalogo.find(x => x.id === el.dataset.id); if (!c) return; if (!await confirmar(`Apagar <b>${esc(c.desc)}</b> da tabela de preços?<br><small>Os orçamentos já feitos não mudam.</small>`, {ok:'Apagar', perigo:true})) return;
+    db.catalogo = db.catalogo.filter(x => x.id !== c.id); salvar(); renderItens(); toast('Item apagado.', 'ok'); },
+  logo: () => { const i = $('#arq-logo'); i.value = ''; i.click(); },
+  semLogo: () => { db.empresa.logo = ''; salvar(); renderAjustes(); },
+  exportar: () => { baixar(`orcafacil_backup_${hoje()}.json`, JSON.stringify({...db, exportadoEm:new Date().toISOString()}, null, 2), 'application/json'); toast('Backup gerado.', 'ok'); },
+  importar: () => { const i = $('#arq-import'); i.value = ''; i.click(); },
+  limpar: async () => { if (!await confirmar('Apagar <b>todos</b> os orçamentos, itens e dados da empresa deste celular?<br><small>Exporte um backup antes, se precisar.</small>', {ok:'Continuar', perigo:true})) return;
+    if (!await confirmar('Tem certeza? Não dá para desfazer.', {ok:'Apagar tudo', perigo:true, titulo:'Última confirmação'})) return;
+    db = vazio(); db.config.avisoVisto = true; salvar(); ir('lista'); toast('Tudo apagado.', 'ok'); }
+};
+const forms = {
+  cat: fm => { const E = fm.elements, id = E.id.value, desc = E.desc.value.trim(), valor = parseNum(E.valor.value);
+    if (desc.length < 2) return erroForm(fm, 'Escreva a descrição do item.');
+    if (db.catalogo.some(c => c.id !== id && c.desc.toLowerCase() === desc.toLowerCase())) return erroForm(fm, 'Esse item já existe na tabela.');
+    if (!(valor >= 0) || isNaN(valor) || valor > 10000000) return erroForm(fm, 'Informe o preço (ex.: 35,00).');
+    const dados = {desc, tipo:E.tipo.value === 'mat' ? 'mat' : 'mo', un:E.un.value, valor};
+    if (id) Object.assign(db.catalogo.find(c => c.id === id), dados); else db.catalogo.push({id:uid(), ...dados, usadoEm:''});
+    salvar(); fecharModal(true); renderItens(); toast('Item salvo.', 'ok'); }
+};
+
+/* ========== EVENTOS ========== */
+document.addEventListener('click', e => {
+  const m = e.target.closest('[data-m]'); if (m){ fecharModal(m.dataset.m === 'sim'); return; }
+  if (e.target.id === 'modal'){ fecharModal(false); return; }
+  const n = e.target.closest('[data-nav]'); if (n){ e.preventDefault(); fecharModal(false); ir(n.dataset.nav); return; }
+  const a = e.target.closest('[data-act]'); if (a && acoes[a.dataset.act]){ e.preventDefault(); acoes[a.dataset.act](a); }
+});
+document.addEventListener('submit', e => { const h = forms[e.target.dataset.form]; if (h){ e.preventDefault(); h(e.target); } });
+function onEmpresa(t){
+  if (t.dataset.mask === 'tel') t.value = mascaraTel(t.value);
+  const k = t.dataset.e;
+  if (k === 'validade'){ const v = parseInt(t.value, 10); if (!(v >= 0 && v <= 365)){ t.style.borderColor = 'var(--vermelho)'; return; } t.style.borderColor = ''; db.empresa.validade = v; }
+  else db.empresa[k] = t.value;
+  salvarDepois();
+}
+['input', 'change'].forEach(ev => document.addEventListener(ev, e => {
+  const t = e.target;
+  if (t.closest('#v-editor') && (t.dataset.f || t.dataset.i)){ if (ev === 'change' && t.tagName === 'INPUT' && t.type !== 'radio' && t.type !== 'date') return; onEditorInput(t); return; }
+  if (t.dataset.e){ onEmpresa(t); return; }
+  if (ev === 'input' && t.id === 'busca'){ st.busca = t.value; const pos = t.selectionStart; renderLista(); const b = $('#busca'); b.focus(); try { b.setSelectionRange(pos, pos); } catch(_){} return; }
+  if (ev === 'input' && t.id === 'busca-itens'){ st.buscaItens = t.value; const pos = t.selectionStart; renderItens(); const b = $('#busca-itens'); b.focus(); try { b.setSelectionRange(pos, pos); } catch(_){} return; }
+  if (ev === 'change' && t.id === 'arq-logo' && t.files[0]) carregarLogo(t.files[0]);
+  if (ev === 'change' && t.id === 'arq-import' && t.files[0]) importar(t.files[0]);
+}));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modal').classList.contains('open')) fecharModal(false); });
+window.addEventListener('pagehide', () => { if (st.view === 'editor') salvar(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) salvar(); });
+function importar(file){
+  const r = new FileReader();
+  r.onload = async () => { let d; try { d = JSON.parse(r.result); } catch(_){ return toast('Arquivo inválido.', 'erro'); }
+    const v = validar(d); if (!v.ok) return toast('Backup inválido: ' + v.erro, 'erro');
+    if (!await confirmar(`Backup com <b>${d.orcamentos.length}</b> orçamento(s) e <b>${(d.catalogo || []).length}</b> item(ns).<br>Substituir os dados atuais?`, {ok:'Importar', perigo:true})) return;
+    db = normalizar(d); db.config.avisoVisto = true; salvar(); ir('lista'); toast('✅ Backup importado.', 'ok'); };
+  r.readAsText(file, 'utf-8');
+}
+ir('lista');
+</script>
+</body>
+</html>
