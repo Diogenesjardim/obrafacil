@@ -212,6 +212,7 @@ textarea{min-height:76px;resize:vertical}
 
 <script>
 'use strict';
+const pinAtivo = () => { try { return !!(JSON.parse(localStorage.getItem('obrafacil_pin') || 'null') || {}).ativo; } catch(_){ return false; } };
 /* ========== UTILITÁRIOS ========== */
 const CHAVE = 'obrafacil_orcamentos_v1';
 const UNS = ['un','m²','m','m³','diária','hora','kg','saco','lata','barra','peça','verba','serviço'];
@@ -681,6 +682,7 @@ function renderAjustes(){
       <label>Forma de pagamento<textarea data-e="pagamento" maxlength="500">${esc(e.pagamento)}</textarea></label>
       <label style="margin-bottom:0">Observações padrão<textarea data-e="obs" maxlength="800" placeholder="Ex.: Garantia de 90 dias.">${esc(e.obs)}</textarea></label>
     </div>
+    <div class="panel"><h3>🔒 PIN</h3><p class="hint" style="margin:0">${pinAtivo() ? "✅ Ativado. " : ""}O PIN é ligado e desligado no ObraFácil, em ⚙️. Ele vale para o app todo.</p></div>
     <div class="panel"><h3>💾 Backup</h3>
       <div class="aviso" style="display:block;margin-bottom:12px">⚠️ Os dados ficam <b>só neste celular</b>. O backup do ObraFácil (⚙️ → Exportar backup) já leva os orçamentos junto. Este aqui exporta só os orçamentos.</div>
       <div class="btns"><button class="btn btn-primary" data-act="exportar">⬇️ Exportar backup</button><button class="btn btn-azul" data-act="importar">⬆️ Importar backup</button></div>
@@ -807,5 +809,168 @@ function importar(file){
 }
 ir('lista');
 </script>
+<!-- ===== PIN DE ACESSO (compartilhado entre ObraFácil e Orçamentos) ===== -->
+<style>
+#pinlock{position:fixed;inset:0;z-index:200;background:linear-gradient(160deg,#0f2a4a,#17406e);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 20px) 20px calc(env(safe-area-inset-bottom) + 20px);text-align:center;overflow-y:auto}
+#pinlock.on{display:flex}
+#pinlock .pl-logo{width:64px;height:64px;border-radius:16px;background:#f47c20;display:grid;place-items:center;margin-bottom:14px;flex:none}
+#pinlock h2{color:#fff;margin:0 0 6px;font-size:1.4rem}
+#pinlock .pl-msg{color:#c9d6e8;min-height:1.4em;margin:0 0 18px;font-size:.95rem;max-width:320px}
+#pinlock .pl-msg.erro{color:#ffc2b8;font-weight:700}
+#pinlock .pl-dots{display:flex;gap:18px;margin-bottom:28px}
+#pinlock .pl-dots i{width:18px;height:18px;border-radius:50%;border:2px solid #fff}
+#pinlock .pl-dots i.on{background:#fff}
+#pinlock .pl-dots.treme{animation:pltreme .35s}
+@keyframes pltreme{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+#pinlock .pl-tec{display:grid;grid-template-columns:repeat(3,76px);gap:16px}
+#pinlock .pl-tec button{width:76px;height:76px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;font-size:1.8rem;font-weight:600;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
+#pinlock .pl-tec button:active{background:rgba(255,255,255,.35)}
+#pinlock .pl-tec button.txt{background:none;font-size:.85rem;font-weight:700}
+#pinlock .pl-tec button:disabled{opacity:.3}
+#pinlock .pl-form{width:100%;max-width:340px;text-align:left}
+#pinlock .pl-form label{color:#fff;display:block;font-weight:600;font-size:.9rem;margin-bottom:12px}
+#pinlock .pl-form select,#pinlock .pl-form input{display:block;width:100%;margin-top:6px;font-size:16px;padding:12px;border-radius:11px;border:0;min-height:48px;font-family:inherit;color:#1a2433;background:#fff}
+#pinlock .pl-btn{display:block;width:100%;margin-top:8px;border:0;border-radius:12px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;min-height:50px}
+#pinlock .pl-btn.pri{background:#f47c20;color:#fff}
+#pinlock .pl-btn.sec{background:rgba(255,255,255,.14);color:#fff}
+</style>
+<div id="pinlock" role="dialog" aria-modal="true" aria-label="PIN de acesso"></div>
+<script>
+(function(){
+  'use strict';
+  const K = 'obrafacil_pin', SESS = 'obrafacil_pin_ok', HID = 'obrafacil_pin_hid';
+  const TEMPO_TRAVA = 3 * 60 * 1000, MAX_ERROS = 5, ESPERA = 30 * 1000;
+  const PERGUNTAS = ['Qual o nome da sua mãe?', 'Em que cidade você nasceu?', 'Qual o nome do seu primeiro animal?', 'Qual era seu apelido de infância?', 'Qual o nome da sua primeira escola?'];
+  const el = document.getElementById('pinlock');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+  function hash(str){
+    let a = 0x811c9dc5, b = 0x9e3779b9;
+    for (let r = 0; r < 2000; r++){
+      for (let i = 0; i < str.length; i++){ const c = str.charCodeAt(i) + r; a = Math.imul(a ^ c, 16777619); b = Math.imul(b ^ c, 2246822519) ^ (b >>> 13); }
+      a ^= b >>> 7; b ^= a << 3;
+    }
+    return (a >>> 0).toString(16).padStart(8, '0') + (b >>> 0).toString(16).padStart(8, '0');
+  }
+  const ler = () => { try { return JSON.parse(localStorage.getItem(K) || 'null'); } catch(_){ return null; } };
+  const gravar = d => { try { localStorage.setItem(K, JSON.stringify(d)); } catch(_){} };
+  const ss = { get:k => { try { return sessionStorage.getItem(k); } catch(_){ return null; } }, set:(k, v) => { try { sessionStorage.setItem(k, v); } catch(_){} }, del:k => { try { sessionStorage.removeItem(k); } catch(_){} } };
+  const ativo = () => !!(ler() && ler().ativo);
+
+  let modo = '', buf = '', novoPin = '', aoFim = null, cancelavel = false, manterPergunta = false, msg = '', erroMsg = false;
+  const ICONE = '<div class="pl-logo"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>';
+  const TITULOS = {entrar:'Digite seu PIN', novo:'Crie um PIN de 4 números', confirmar:'Digite o PIN de novo', atual:'Digite o PIN atual'};
+
+  function render(){
+    const d = ler();
+    if (modo === 'pergunta'){
+      el.innerHTML = `${ICONE}<h2>Pergunta de segurança</h2><p class="pl-msg">Serve para criar um PIN novo se você esquecer.</p>
+        <form class="pl-form" id="pl-f"><label>Pergunta<select name="p">${PERGUNTAS.map(p => `<option>${esc(p)}</option>`).join('')}</select></label>
+        <label>Sua resposta<input name="r" maxlength="60" autocomplete="off" required></label>
+        <p class="pl-msg ${erroMsg ? 'erro' : ''}" style="margin:0">${esc(msg)}</p>
+        <button class="pl-btn pri">Salvar PIN</button><button type="button" class="pl-btn sec" data-pl="cancelar">Cancelar</button></form>`;
+      return;
+    }
+    if (modo === 'recuperar'){
+      el.innerHTML = `${ICONE}<h2>Esqueci o PIN</h2><p class="pl-msg">Responda a pergunta para criar um PIN novo. Seus dados não são apagados.</p>
+        <form class="pl-form" id="pl-f"><label>${esc(d && d.pergunta)}<input name="r" maxlength="60" autocomplete="off" required></label>
+        <p class="pl-msg ${erroMsg ? 'erro' : ''}" style="margin:0">${esc(msg)}</p>
+        <button class="pl-btn pri">Continuar</button><button type="button" class="pl-btn sec" data-pl="voltar">Voltar</button></form>`;
+      return;
+    }
+    const bloq = d && d.bloqAte && Date.now() < d.bloqAte;
+    const esq = modo === 'entrar' ? '<button class="txt" data-pl="esqueci">Esqueci</button>' : cancelavel ? '<button class="txt" data-pl="cancelar">Cancelar</button>' : '<span></span>';
+    el.innerHTML = `${ICONE}<h2>${TITULOS[modo]}</h2>
+      <p class="pl-msg ${erroMsg ? 'erro' : ''}">${esc(bloq ? `Muitas tentativas. Espere ${Math.ceil((d.bloqAte - Date.now()) / 1000)} segundos.` : msg)}</p>
+      <div class="pl-dots" id="pl-dots">${[0,1,2,3].map(i => `<i class="${i < buf.length ? 'on' : ''}"></i>`).join('')}</div>
+      <div class="pl-tec">${[1,2,3,4,5,6,7,8,9].map(n => `<button data-n="${n}" ${bloq ? 'disabled' : ''}>${n}</button>`).join('')}${esq}<button data-n="0" ${bloq ? 'disabled' : ''}>0</button><button class="txt" data-pl="apagar" aria-label="Apagar">⌫</button></div>`;
+    if (bloq){ clearTimeout(render._t); render._t = setTimeout(render, 1000); }
+  }
+  function abrir(m, opts = {}){
+    modo = m; buf = ''; msg = opts.msg || ''; erroMsg = false; cancelavel = !!opts.cancelavel; aoFim = opts.aoFim || aoFim;
+    el.classList.add('on'); document.body.style.overflow = 'hidden'; render();
+  }
+  function fechar(){ el.classList.remove('on'); el.innerHTML = ''; document.body.style.overflow = ''; modo = ''; buf = ''; novoPin = ''; }
+  function erro(t){ msg = t; erroMsg = true; buf = ''; render(); const dots = document.getElementById('pl-dots'); if (dots){ dots.classList.add('treme'); if (navigator.vibrate) navigator.vibrate(120); } }
+  function liberar(){ ss.set(SESS, '1'); ss.del(HID); }
+  function fim(texto){ const f = aoFim; aoFim = null; fechar(); if (f) f(texto); }
+
+  function conferir(){
+    const d = ler();
+    if (modo === 'entrar' || modo === 'atual'){
+      if (d && hash(d.salt + buf) === d.hash){
+        d.erros = 0; d.bloqAte = 0; gravar(d);
+        if (modo === 'entrar'){ liberar(); fechar(); return; }
+        if (manterPergunta === 'desativar'){ d.ativo = false; gravar(d); liberar(); return fim('PIN desativado.'); }
+        manterPergunta = true; return abrir('novo', {cancelavel:true});
+      }
+      d.erros = (d.erros || 0) + 1;
+      if (d.erros >= MAX_ERROS){ d.erros = 0; d.bloqAte = Date.now() + ESPERA; }
+      gravar(d);
+      return erro(d.bloqAte > Date.now() ? 'PIN errado.' : `PIN errado. Tente de novo (${MAX_ERROS - d.erros} tentativa(s)).`);
+    }
+    if (modo === 'novo'){ novoPin = buf; return abrir('confirmar', {cancelavel}); }
+    if (modo === 'confirmar'){
+      if (buf !== novoPin){ const c = cancelavel; abrir('novo', {cancelavel:c}); return erro('Os PINs não ficaram iguais. Crie de novo.'); }
+      if (manterPergunta && d && d.pergunta){
+        Object.assign(d, {ativo:true, hash:hash(d.salt + novoPin), erros:0, bloqAte:0}); gravar(d); liberar();
+        manterPergunta = false; return fim('PIN alterado.');
+      }
+      modo = 'pergunta'; msg = ''; erroMsg = false; render(); return;
+    }
+  }
+  el.addEventListener('click', e => {
+    const n = e.target.closest('[data-n]'); const a = e.target.closest('[data-pl]');
+    if (n && !n.disabled && buf.length < 4){ buf += n.dataset.n; msg = ''; erroMsg = false; render(); if (buf.length === 4) setTimeout(conferir, 140); return; }
+    if (!a) return;
+    const k = a.dataset.pl;
+    if (k === 'apagar'){ buf = buf.slice(0, -1); render(); }
+    else if (k === 'esqueci'){ modo = 'recuperar'; msg = ''; erroMsg = false; render(); }
+    else if (k === 'voltar'){ abrir('entrar'); }
+    else if (k === 'cancelar'){ manterPergunta = false; const f = aoFim; aoFim = null; fechar(); if (f) f(''); }
+  });
+  el.addEventListener('submit', e => {
+    e.preventDefault();
+    const f = e.target, r = norm(f.elements.r.value);
+    if (r.length < 2){ msg = 'Escreva a resposta.'; erroMsg = true; return render(); }
+    if (modo === 'pergunta'){
+      const salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      gravar({ativo:true, salt, hash:hash(salt + novoPin), pergunta:f.elements.p.value, resp:hash(salt + '|' + r), erros:0, bloqAte:0});
+      liberar(); return fim('PIN ativado! Ele será pedido ao abrir o app.');
+    }
+    if (modo === 'recuperar'){
+      const d = ler();
+      if (d && hash(d.salt + '|' + r) === d.resp){ manterPergunta = true; return abrir('novo', {msg:'Resposta certa! Crie um PIN novo.'}); }
+      msg = 'Resposta não confere. Tente de novo.'; erroMsg = true; render();
+    }
+  });
+  document.addEventListener('keydown', e => {
+    if (!el.classList.contains('on') || modo === 'pergunta' || modo === 'recuperar') return;
+    if (/^\d$/.test(e.key)){ e.preventDefault(); const b = el.querySelector(`[data-n="${e.key}"]`); if (b) b.click(); }
+    else if (e.key === 'Backspace'){ e.preventDefault(); buf = buf.slice(0, -1); render(); }
+  }, true);
+
+  function precisaTravar(){
+    if (!ativo()) return false;
+    const hid = +ss.get(HID) || 0;
+    if (hid && Date.now() - hid > TEMPO_TRAVA) ss.del(SESS);
+    return ss.get(SESS) !== '1';
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden){ if (ss.get(SESS) === '1') ss.set(HID, String(Date.now())); }
+    else if (precisaTravar() && !el.classList.contains('on')) abrir('entrar');
+    else ss.del(HID);
+  });
+  if (precisaTravar()) abrir('entrar');
+
+  window.PIN = {
+    ativo,
+    configurar: cb => { manterPergunta = false; aoFim = cb; abrir('novo', {cancelavel:true, aoFim:cb}); },
+    trocar: cb => { manterPergunta = 'trocar'; aoFim = cb; abrir('atual', {cancelavel:true, aoFim:cb}); },
+    desativar: cb => { manterPergunta = 'desativar'; aoFim = cb; abrir('atual', {cancelavel:true, aoFim:cb, msg:'Para desativar, confirme o PIN.'}); }
+  };
+})();
+</script>
+
 </body>
 </html>

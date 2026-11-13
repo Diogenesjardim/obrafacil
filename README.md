@@ -11,6 +11,7 @@ Controle de diárias de funcionários da construção civil — app web em um ú
 - Gastos ADM (café, almoço, gasolina, material) por trabalhador e por obra
 - Resumo, relatório para PDF e exportação CSV
 - Backup e importação em JSON
+- PIN de acesso opcional (⚙️), com recuperação por pergunta de segurança
 
 ## Importante
 Os dados ficam salvos **somente no navegador do aparelho** (localStorage). Faça backup em ⚙️ → Exportar backup com frequência.
