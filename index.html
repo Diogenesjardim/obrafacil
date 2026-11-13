@@ -267,7 +267,7 @@ details.mais[open] summary::after{content:' ▴'}
 .mg small{font-weight:600;font-size:.8rem;color:#fff;opacity:1;background:rgba(0,0,0,.18);padding:2px 8px;border-radius:999px}
 .mg.azul{background:var(--azul)} .mg.laranja{background:var(--laranja)} .mg.verde{background:var(--verde)} .mg.roxo{background:#5b4bc4} .mg.cinza{background:#2f6fb3}
 .mg.largo{grid-column:1 / -1;min-height:96px;flex-direction:row;gap:14px}
-.mg.azul2{background:#24507f} .mg.marrom{background:#8a5a2b}
+.mg.azul2{background:#24507f} .mg.laranja2{background:linear-gradient(135deg,#f47c20,#d9660d)} .mg.marrom{background:#8a5a2b}
 .cat-chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
 .cat-chips button{border:1px solid var(--borda);background:#fff;border-radius:14px;padding:14px 4px;font-size:.95rem;font-weight:700;cursor:pointer;min-height:64px;color:var(--texto)}
 .seg.cats label{min-width:30%}
@@ -319,6 +319,8 @@ details.mais[open] summary::after{content:' ▴'}
 'use strict';
 /* ================== CONSTANTES E UTILITÁRIOS ================== */
 const CHAVE = 'obrafacil_dados_v1';
+const CHAVE_ORC = 'obrafacil_orcamentos_v1';
+function lerOrc(){ try { const d = JSON.parse(localStorage.getItem(CHAVE_ORC) || 'null'); return d && Array.isArray(d.orcamentos) ? d : null; } catch(_){ return null; } }
 const FUNCOES = ['Pedreiro','Servente','Pintor','Eletricista','Encanador','Ajudante','Carpinteiro','Armador','Azulejista','Gesseiro','Mestre de obras','Outro'];
 const STATUS = {andamento:'Em andamento', pausada:'Pausada', concluida:'Concluída'};
 const TIPOS = {completa:'Diária completa', meia:'Meia diária', falta:'Falta', personalizado:'Empreita / valor combinado'};
@@ -936,12 +938,13 @@ function renderInicio(){
       </div><p class="hint" style="margin:10px 0 0">Depois é só marcar os dias.</p></div>` : ''}
     <div class="menu-grande">
       <button class="mg verde largo" data-act="novoFunc"><span class="e">➕</span><span>Cadastrar trabalhador</span></button>
+      <a class="mg laranja2" href="orcamento/" style="text-decoration:none"><span class="e">📄</span><span>Orçamentos</span><small>${(() => { const d = lerOrc(); const n = d ? d.orcamentos.filter(o => o.status === 'enviado').length : 0; return n ? n + ' aguardando' : 'fazer e enviar'; })()}</small></a>
       <button class="mg azul" data-nav="diarias"><span class="e">📅</span><span>Marcar dia</span><small>${marcadosHoje ? marcadosHoje + ' marcado(s) hoje' : 'quem trabalhou hoje'}</small></button>
       <button class="mg azul2" data-act="variosDias"><span class="e">📆</span><span>Vários dias</span><small>de uma vez só</small></button>
       <button class="mg roxo" data-act="valeRapido"><span class="e">🎟️</span><span>Vale</span><small>adiantamento</small></button>
       <button class="mg cinza" data-act="pagRapido"><span class="e">💵</span><span>Pagamento</span><small>pagar um valor</small></button>
       <button class="mg laranja" data-nav="pagamentos"><span class="e">🤝</span><span>Acerto</span><small>${deve > 0 ? 'a pagar: ' + fmt(deve) : 'tudo em dia'}</small></button>
-      <button class="mg marrom" data-nav="adm"><span class="e">🧾</span><span>Gastos ADM</span><small>café, almoço, gasolina</small></button>
+      <button class="mg marrom largo" data-nav="adm"><span class="e">🧾</span><span>Gastos ADM</span><small>café, almoço, gasolina</small></button>
     </div>
     <div class="btns"><button class="btn" style="flex:1" data-nav="funcionarios">👷 Ver equipe</button><button class="btn" style="flex:1" data-nav="dashboard">📊 Resumo</button></div>`;
 }
@@ -1222,7 +1225,7 @@ function renderConfig(){
     <div class="panel">
       <h3>Backup</h3>
       <div class="btns"><button class="btn btn-primary" data-act="exportar">⬇️ Exportar backup (JSON)</button><button class="btn btn-azul" data-act="importar">⬆️ Importar backup</button></div>
-      <p class="hint" style="margin-top:10px">Ao importar, o arquivo é verificado antes. Se estiver correto, ele substitui todos os dados atuais.</p>
+      <p class="hint" style="margin-top:10px">O backup leva <b>tudo junto</b>: diárias, pagamentos, gastos e orçamentos. Ao importar, o arquivo é verificado antes e substitui os dados atuais.</p>
     </div>
     <div class="panel">
       <h3>Demonstração e limpeza</h3>
@@ -1369,7 +1372,7 @@ const acoes = {
     baixar(`obrafacil_pagamentos_${sufixoArq()}.csv`, csv(L), 'text/csv;charset=utf-8');
   },
 
-  exportar: () => { const dados = {...db, exportadoEm:new Date().toISOString()}; baixar(`obrafacil_backup_${hoje()}.json`, JSON.stringify(dados, null, 2), 'application/json'); },
+  exportar: () => { const dados = {...db, orcamentosApp:lerOrc(), exportadoEm:new Date().toISOString()}; baixar(`obrafacil_backup_${hoje()}.json`, JSON.stringify(dados, null, 2), 'application/json'); },
   importar: () => { const i = $('#arquivo-import'); i.value = ''; i.click(); },
   carregarDemo: async () => {
     if (!await confirmar('Carregar os dados de demonstração?<br><small><b>Todos os dados atuais serão substituídos.</b> Exporte um backup antes, se precisar.</small>', {ok:'Carregar demo', perigo:true})) return;
@@ -1531,10 +1534,16 @@ function importarArquivo(file){
   leitor.onload = async () => {
     let dados;
     try { dados = JSON.parse(leitor.result); } catch(e){ return toast('Arquivo inválido: não é um JSON.', 'erro'); }
+    if (dados && dados.app === 'ObraFacilOrcamentos' && Array.isArray(dados.orcamentos)){
+      if (!await confirmar(`Este é um backup de <b>orçamentos</b> (${dados.orcamentos.length} orçamento(s)).<br>Substituir os orçamentos atuais por ele?`, {ok:'Importar orçamentos', perigo:true})) return;
+      localStorage.setItem(CHAVE_ORC, JSON.stringify(dados)); toast('✅ Orçamentos importados.', 'ok'); return ir('inicio');
+    }
     const v = validar(dados);
     if (!v.ok) return toast('Backup inválido: ' + v.erro, 'erro');
-    if (!await confirmar(`Backup válido com <b>${dados.funcionarios.length}</b> funcionário(s), <b>${dados.obras.length}</b> obra(s), <b>${dados.diarias.length}</b> diária(s) e <b>${dados.pagamentos.length}</b> pagamento(s).<br><br>Substituir <b>todos</b> os dados atuais por este backup?`, {ok:'Importar', perigo:true})) return;
-    db = normalizar(dados); db.config.avisoVisto = true; salvar(); toast('✅ Backup importado com sucesso.', 'ok'); ir('inicio');
+    if (!await confirmar(`Backup válido com <b>${dados.funcionarios.length}</b> funcionário(s), <b>${dados.obras.length}</b> obra(s), <b>${dados.diarias.length}</b> diária(s) e <b>${dados.pagamentos.length}</b> pagamento(s)${dados.orcamentosApp ? `, mais <b>${(dados.orcamentosApp.orcamentos || []).length}</b> orçamento(s)` : ''}.<br><br>Substituir <b>todos</b> os dados atuais por este backup?`, {ok:'Importar', perigo:true})) return;
+    db = normalizar(dados); db.config.avisoVisto = true; salvar();
+    if (dados.orcamentosApp && Array.isArray(dados.orcamentosApp.orcamentos)) localStorage.setItem(CHAVE_ORC, JSON.stringify(dados.orcamentosApp));
+    toast('✅ Backup importado com sucesso.', 'ok'); ir('inicio');
   };
   leitor.onerror = () => toast('Não foi possível ler o arquivo.', 'erro');
   leitor.readAsText(file, 'utf-8');

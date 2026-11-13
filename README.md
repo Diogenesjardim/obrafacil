@@ -2,8 +2,7 @@
 
 Controle de diárias de funcionários da construção civil — app web em um único arquivo (`index.html`), sem servidor e sem instalação.
 
-**Diárias:** https://diogenesjardim.github.io/obrafacil/  
-**Orçamentos:** https://diogenesjardim.github.io/obrafacil/orcamento/
+**Acesse:** https://diogenesjardim.github.io/obrafacil/ (orçamentos ficam no botão 📄 Orçamentos da tela inicial)
 
 ## Funções
 - Cadastro de trabalhadores e obras
@@ -18,7 +17,9 @@ Os dados ficam salvos **somente no navegador do aparelho** (localStorage). Faça
 
 No iPhone: abra o link no Safari → Compartilhar → **Adicionar à Tela de Início**, e use sempre pelo ícone.
 
-## Orçamentos (`/orcamento/`)
+## Orçamentos (`/orcamento/`, dentro do ObraFácil)
+- Orçamento aprovado vira obra no ObraFácil com um toque
+- O backup do ObraFácil já inclui os orçamentos
 - Orçamento com itens de mão de obra e material, desconto, validade, pagamento e prazo
 - Tabela de preços que se preenche sozinha com o último preço usado
 - PDF com logo e dados da empresa, e envio pelo WhatsApp
