@@ -497,7 +497,11 @@ function gerarDemo(){
 }
 
 let db = carregar();
-if (!db){ db = gerarDemo(); } salvar();
+// Começa zerado. Se o aparelho só tiver os dados de demonstração antigos, limpa automaticamente.
+const NOMES_DEMO = ['Pedro Fictício','Marcos Exemplo','Luiz Demonstração','Rafael Modelo','André Teste','Bruno Amostra'];
+const soDemo = d => d && d.funcionarios.length > 0 && d.funcionarios.every(f => NOMES_DEMO.includes(f.nome)) && !d.config.demoManual;
+if (!db || soDemo(db)){ db = vazio(); }
+salvar();
 
 /* ================== REGRAS DE NEGÓCIO ================== */
 const func = id => db.funcionarios.find(f => f.id === id);
@@ -925,6 +929,11 @@ function renderInicio(){
   const marcadosHoje = db.diarias.filter(d => d.data === hoje()).length;
   $('#v-inicio').innerHTML = `
     <div class="ola"><h2>O que você quer fazer?</h2><small>${diaSemana(hoje())}, ${fmtData(hoje())}</small></div>
+    ${!db.funcionarios.length || !db.obras.length ? `<div class="panel" style="border:2px dashed var(--laranja)"><h3>👋 Primeiros passos</h3>
+      <div class="lista">
+        <button class="btn btn-block ${db.funcionarios.length ? '' : 'btn-primary'}" data-act="novoFunc">${db.funcionarios.length ? '✅' : '1.'} Cadastrar trabalhador</button>
+        <button class="btn btn-block ${!db.funcionarios.length || db.obras.length ? '' : 'btn-primary'}" data-act="novaObra">${db.obras.length ? '✅' : '2.'} Cadastrar obra / cliente</button>
+      </div><p class="hint" style="margin:10px 0 0">Depois é só marcar os dias.</p></div>` : ''}
     <div class="menu-grande">
       <button class="mg verde largo" data-act="novoFunc"><span class="e">➕</span><span>Cadastrar trabalhador</span></button>
       <button class="mg azul" data-nav="diarias"><span class="e">📅</span><span>Marcar dia</span><small>${marcadosHoje ? marcadosHoje + ' marcado(s) hoje' : 'quem trabalhou hoje'}</small></button>
@@ -1364,7 +1373,7 @@ const acoes = {
   importar: () => { const i = $('#arquivo-import'); i.value = ''; i.click(); },
   carregarDemo: async () => {
     if (!await confirmar('Carregar os dados de demonstração?<br><small><b>Todos os dados atuais serão substituídos.</b> Exporte um backup antes, se precisar.</small>', {ok:'Carregar demo', perigo:true})) return;
-    db = gerarDemo(); db.config.avisoVisto = true; salvar(); toast('Dados de demonstração carregados.', 'ok'); ir('inicio');
+    db = gerarDemo(); db.config.avisoVisto = true; db.config.demoManual = true; salvar(); toast('Dados de demonstração carregados.', 'ok'); ir('inicio');
   },
   limparTudo: async () => {
     if (!await confirmar('Apagar <b>TODOS</b> os funcionários, obras, diárias e pagamentos deste aparelho?<br><small>Esta ação não pode ser desfeita. Recomendamos exportar um backup antes.</small>', {ok:'Continuar', perigo:true})) return;
